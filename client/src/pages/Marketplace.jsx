@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { StarDisplay } from '../components/StarRating';
 
 function Marketplace() {
     const [products, setProducts] = useState([]);
@@ -133,6 +134,13 @@ function Marketplace() {
                                     <Link to={`/marketplace/${product._id}`}>
                                         <h3 className="font-bold text-lg mb-2 hover:text-primary">{product.name}</h3>
                                     </Link>
+
+                                    {product.rating?.count > 0 && (
+                                        <div className="mb-2">
+                                            <StarDisplay rating={product.rating.average} showNumber={true} />
+                                            <span className="text-xs text-gray-500 ml-1">({product.rating.count})</span>
+                                        </div>
+                                    )}
 
                                     <p className="text-gray-600 text-sm mb-3 line-clamp-2">{product.description}</p>
 

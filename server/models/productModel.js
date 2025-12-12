@@ -41,6 +41,10 @@ const productSchema = mongoose.Schema({
     isApproved: {
         type: Boolean,
         default: false
+    },
+    rating: {
+        average: { type: Number, default: 0 },
+        count: { type: Number, default: 0 }
     }
 }, {
     timestamps: true

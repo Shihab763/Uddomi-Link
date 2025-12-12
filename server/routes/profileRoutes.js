@@ -7,10 +7,11 @@ const {
     getAllSellers
 } = require('../controllers/profileController');
 const { protect } = require('../middleware/authMiddleware');
+const { optionalAuth } = require('../middleware/optionalAuthMiddleware');
 
-// Public routes
+// Public routes (with optional auth for view tracking)
 router.get('/sellers', getAllSellers);
-router.get('/:userId', getUserProfile);
+router.get('/:userId', optionalAuth, getUserProfile);
 
 // Private routes
 router.get('/me/profile', protect, getMyProfile);

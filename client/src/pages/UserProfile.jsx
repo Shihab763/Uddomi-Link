@@ -16,7 +16,14 @@ function UserProfile() {
 
     const fetchProfile = async () => {
         try {
-            const response = await fetch(`http://localhost:5000/api/profile/${userId}`);
+            const headers = {};
+            if (currentUser && currentUser.token) {
+                headers['Authorization'] = `Bearer ${currentUser.token}`;
+            }
+
+            const response = await fetch(`http://localhost:5000/api/profile/${userId}`, {
+                headers
+            });
 
             if (response.ok) {
                 const data = await response.json();

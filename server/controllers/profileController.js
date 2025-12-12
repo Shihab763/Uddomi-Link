@@ -1,21 +1,26 @@
 const User = require('../models/userModel');
 const Product = require('../models/productModel');
 
-// Get user profile by ID (public)
+
 const getUserProfile = async (req, res) => {
     try {
-        const user = await User.findById(req.params.userId).select('-password');
+        const viewerId = req.user?._id;
+        const profileId = req.params.userId;
+
+        const user = await User.findById(profileId).select('-password');
 
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
+        let shouldIncrement = viewerId ? viewerId.toString() !== profileId : true;
 
-        // Increment profile views
-        if (!user.profile) {
-            user.profile = {};
+        if (shouldIncrement) {
+
+            await User.findByIdAndUpdate(
+                profileId,
+                { $inc: { 'profile.profileViews': 1 } }
+            );
         }
-        user.profile.profileViews = (user.profile.profileViews || 0) + 1;
-        await user.save();
 
         // Get user's products, business owner view
         let products = [];
@@ -29,7 +34,7 @@ const getUserProfile = async (req, res) => {
             stats: {
                 memberSince: user.createdAt,
                 productCount: products.length,
-                profileViews: user.profile?.profileViews || 0
+                profileViews: (user.profile?.profileViews || 0) + (shouldIncrement ? 1 : 0)
             }
         });
     } catch (error) {

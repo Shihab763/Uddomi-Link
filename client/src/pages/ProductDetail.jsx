@@ -1,15 +1,23 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { StarDisplay, StarInput } from '../components/StarRating';
 
 function ProductDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
     const [product, setProduct] = useState(null);
+    const [reviews, setReviews] = useState([]);
     const [loading, setLoading] = useState(true);
     const [quantity, setQuantity] = useState(1);
+    const [showReviewForm, setShowReviewForm] = useState(false);
+    const [newReview, setNewReview] = useState({ rating: 5, comment: '' });
+    const [editingReview, setEditingReview] = useState(null);
+
+    const user = JSON.parse(localStorage.getItem('user'));
 
     useEffect(() => {
         fetchProduct();
+        fetchReviews();
     }, [id]);
 
     const fetchProduct = async () => {
@@ -23,11 +31,93 @@ function ProductDetail() {
                 navigate('/marketplace');
             }
         } catch (error) {
-            console.error('Error:', error);
             alert('Error loading product');
             navigate('/marketplace');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchReviews = async () => {
+        try {
+            const response = await fetch(`http://localhost:5000/api/reviews/product/${id}`);
+            if (response.ok) {
+                const data = await response.json();
+                setReviews(data);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    };
+
+    const handleSubmitReview = async (e) => {
+        e.preventDefault();
+
+        if (!user) {
+            alert('Please login to write a review');
+            return;
+        }
+
+        try {
+            const url = editingReview
+                ? `http://localhost:5000/api/reviews/${editingReview._id}`
+                : 'http://localhost:5000/api/reviews';
+
+            const method = editingReview ? 'PUT' : 'POST';
+
+            const response = await fetch(url, {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${user.token}`
+                },
+                body: JSON.stringify({
+                    productId: id,
+                    rating: newReview.rating,
+                    comment: newReview.comment
+                })
+            });
+
+            if (response.ok) {
+                alert(editingReview ? 'Review updated!' : 'Review posted!');
+                setNewReview({ rating: 5, comment: '' });
+                setShowReviewForm(false);
+                setEditingReview(null);
+                fetchReviews();
+                fetchProduct();
+            } else {
+                const data = await response.json();
+                alert(data.message || 'Error submitting review');
+            }
+        } catch (error) {
+            alert('Error submitting review');
+        }
+    };
+
+    const handleEditReview = (review) => {
+        setEditingReview(review);
+        setNewReview({ rating: review.rating, comment: review.comment });
+        setShowReviewForm(true);
+    };
+
+    const handleDeleteReview = async (reviewId) => {
+        if (!confirm('Delete this review?')) return;
+
+        try {
+            const response = await fetch(`http://localhost:5000/api/reviews/${reviewId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${user.token}`
+                }
+            });
+
+            if (response.ok) {
+                alert('Review deleted');
+                fetchReviews();
+                fetchProduct();
+            }
+        } catch (error) {
+            alert('Error deleting review');
         }
     };
 
@@ -37,7 +127,6 @@ function ProductDetail() {
             return;
         }
 
-        const user = JSON.parse(localStorage.getItem('user'));
         const cartKey = user ? `cart_${user._id}` : 'cart_guest';
         const cart = JSON.parse(localStorage.getItem(cartKey) || '[]');
         const existingItem = cart.find(item => item.productId === product._id);
@@ -75,6 +164,8 @@ function ProductDetail() {
         );
     }
 
+    const userReview = reviews.find(r => r.user?._id === user?._id);
+
     return (
         <div className="min-h-screen bg-light">
             <div className="container mx-auto px-4 py-8">
@@ -85,7 +176,7 @@ function ProductDetail() {
                     ← Back to Marketplace
                 </Link>
 
-                <div className="bg-white rounded-lg shadow-xl overflow-hidden">
+                <div className="bg-white rounded-lg shadow-xl overflow-hidden mb-8">
                     <div className="grid md:grid-cols-2 gap-8">
                         <div className="p-8">
                             <img
@@ -104,6 +195,14 @@ function ProductDetail() {
 
                             <h1 className="text-4xl font-bold text-dark mb-4">{product.name}</h1>
 
+                            {/* Rating Display */}
+                            {product.rating?.count > 0 && (
+                                <div className="mb-4 flex items-center gap-2">
+                                    <StarDisplay rating={product.rating.average} />
+                                    <span className="text-gray-600">({product.rating.count} reviews)</span>
+                                </div>
+                            )}
+
                             <div className="flex items-baseline gap-4 mb-6">
                                 <span className="text-4xl font-bold text-primary">৳{product.price}</span>
                                 <span className="text-gray-600">
@@ -118,12 +217,13 @@ function ProductDetail() {
 
                             <div className="mb-6 p-4 bg-gray-50 rounded-lg">
                                 <h3 className="font-bold text-dark mb-2">Seller Information</h3>
-                                <p className="text-gray-700">
-                                    <span className="font-medium">Name:</span> {product.seller?.name || 'Unknown'}
-                                </p>
-                                <p className="text-gray-700">
-                                    <span className="font-medium">Email:</span> {product.seller?.email || 'N/A'}
-                                </p>
+                                <Link
+                                    to={`/profile/${product.seller?._id}`}
+                                    className="text-primary hover:underline font-semibold"
+                                >
+                                    {product.seller?.name || 'Unknown'}
+                                </Link>
+                                <p className="text-gray-700 text-sm">{product.seller?.email || 'N/A'}</p>
                             </div>
 
                             <div className="mb-6">
@@ -163,6 +263,114 @@ function ProductDetail() {
                             </div>
                         </div>
                     </div>
+                </div>
+
+                {/* Reviews Section */}
+                <div className="bg-white rounded-lg shadow-xl p-8">
+                    <h2 className="text-3xl font-bold mb-6">Customer Reviews</h2>
+
+                    {user && !userReview && !showReviewForm && (
+                        <button
+                            onClick={() => setShowReviewForm(true)}
+                            className="mb-6 bg-primary text-white px-6 py-3 rounded-lg hover:bg-green-800 transition font-bold"
+                        >
+                            ✏️ Write a Review
+                        </button>
+                    )}
+
+                    {showReviewForm && (
+                        <form onSubmit={handleSubmitReview} className="mb-8 p-6 bg-gray-50 rounded-lg">
+                            <h3 className="text-xl font-bold mb-4">
+                                {editingReview ? 'Edit Review' : 'Write Your Review'}
+                            </h3>
+
+                            <div className="mb-4">
+                                <label className="block font-semibold mb-2">Rating</label>
+                                <StarInput rating={newReview.rating} setRating={(r) => setNewReview({ ...newReview, rating: r })} />
+                            </div>
+
+                            <div className="mb-4">
+                                <label className="block font-semibold mb-2">Comment (Max 500 characters)</label>
+                                <textarea
+                                    value={newReview.comment}
+                                    onChange={(e) => setNewReview({ ...newReview, comment: e.target.value })}
+                                    className="w-full p-3 border rounded focus:outline-none focus:border-primary"
+                                    rows="4"
+                                    maxLength="500"
+                                    required
+                                />
+                                <p className="text-sm text-gray-500 mt-1">{newReview.comment.length}/500</p>
+                            </div>
+
+                            <div className="flex gap-4">
+                                <button
+                                    type="submit"
+                                    className="bg-primary text-white px-6 py-2 rounded hover:bg-green-800 transition font-bold"
+                                >
+                                    {editingReview ? 'Update Review' : 'Post Review'}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setShowReviewForm(false);
+                                        setEditingReview(null);
+                                        setNewReview({ rating: 5, comment: '' });
+                                    }}
+                                    className="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600 transition"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </form>
+                    )}
+
+                    {/* Reviews List */}
+                    {reviews.length === 0 ? (
+                        <p className="text-gray-600 text-center py-8">No reviews yet. Be the first to review!</p>
+                    ) : (
+                        <div className="space-y-6">
+                            {reviews.map(review => (
+                                <div key={review._id} className="border-b pb-6 last:border-0">
+                                    <div className="flex items-start gap-4">
+                                        <img
+                                            src={review.user?.profile?.profilePicture || 'https://via.placeholder.com/50'}
+                                            alt={review.user?.name}
+                                            className="w-12 h-12 rounded-full object-cover"
+                                        />
+                                        <div className="flex-1">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <div>
+                                                    <p className="font-bold text-lg">{review.user?.name || 'Anonymous'}</p>
+                                                    <StarDisplay rating={review.rating} showNumber={false} />
+                                                </div>
+                                                <p className="text-sm text-gray-500">
+                                                    {new Date(review.createdAt).toLocaleDateString()}
+                                                </p>
+                                            </div>
+                                            <p className="text-gray-700 mb-3">{review.comment}</p>
+
+                                            {review.user?._id === user?._id && (
+                                                <div className="flex gap-2">
+                                                    <button
+                                                        onClick={() => handleEditReview(review)}
+                                                        className="text-sm text-primary hover:underline"
+                                                    >
+                                                        Edit
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteReview(review._id)}
+                                                        className="text-sm text-accent hover:underline"
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
