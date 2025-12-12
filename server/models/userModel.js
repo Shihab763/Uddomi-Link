@@ -18,6 +18,38 @@ const userSchema = mongoose.Schema({
     type: [String],
     enum: ['user', 'business-owner', 'investor', 'admin'],
     default: ['user']
+  },
+  profile: {
+    bio: String,
+    profilePicture: String,
+    coverPhoto: String,
+
+    // Contact Info
+    phone: String,
+    address: {
+      street: String,
+      city: String,
+      district: String,
+      country: { type: String, default: 'Bangladesh' }
+    },
+
+    // Social Links
+    socialLinks: {
+      facebook: String,
+      instagram: String,
+      twitter: String,
+      linkedin: String,
+      website: String
+    },
+
+    // Business Info, business-owners view
+    businessName: String,
+    businessType: String,
+    yearsInBusiness: Number,
+
+    // Stats
+    profileViews: { type: Number, default: 0 },
+    lastUpdated: Date
   }
 }, {
   timestamps: true

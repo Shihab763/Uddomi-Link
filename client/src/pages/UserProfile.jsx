@@ -1,0 +1,254 @@
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+
+function UserProfile() {
+    const { userId } = useParams();
+    const navigate = useNavigate();
+    const [profileData, setProfileData] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    const currentUser = JSON.parse(localStorage.getItem('user'));
+    const isOwnProfile = currentUser && currentUser._id === userId;
+
+    useEffect(() => {
+        fetchProfile();
+    }, [userId]);
+
+    const fetchProfile = async () => {
+        try {
+            const response = await fetch(`http://localhost:5000/api/profile/${userId}`);
+
+            if (response.ok) {
+                const data = await response.json();
+                setProfileData(data);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-light flex items-center justify-center">
+                <p className="text-xl">Loading...</p>
+            </div>
+        );
+    }
+
+    if (!profileData) {
+        return (
+            <div className="min-h-screen bg-light flex items-center justify-center">
+                <p className="text-xl">User not found</p>
+            </div>
+        );
+    }
+
+    const { user, products, stats } = profileData;
+    const profile = user.profile || {};
+
+    return (
+        <div className="min-h-screen bg-light">
+            {/* Cover Photo */}
+            <div
+                className="h-64 bg-gradient-to-r from-primary to-secondary"
+                style={profile.coverPhoto ? { backgroundImage: `url(${profile.coverPhoto})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}
+            />
+
+            <div className="container mx-auto px-4">
+                {/* Profile Header */}
+                <div className="relative -mt-20 mb-8">
+                    <div className="bg-white rounded-lg shadow-lg p-6">
+                        <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
+                            {/* Profile Picture */}
+                            <img
+                                src={profile.profilePicture || 'https://via.placeholder.com/150'}
+                                alt={user.name}
+                                className="w-32 h-32 rounded-full border-4 border-white shadow-lg object-cover"
+                            />
+
+                            {/* User Info */}
+                            <div className="flex-1 text-center md:text-left">
+                                <h1 className="text-3xl font-bold text-dark">{user.name}</h1>
+                                {profile.businessName && (
+                                    <p className="text-xl text-gray-600">{profile.businessName}</p>
+                                )}
+                                {profile.businessType && (
+                                    <p className="text-sm text-gray-500">{profile.businessType}</p>
+                                )}
+
+                                {isOwnProfile && (
+                                    <Link
+                                        to="/profile/edit"
+                                        className="inline-block mt-4 bg-secondary text-dark px-6 py-2 rounded hover:bg-yellow-500 transition font-bold"
+                                    >
+                                        ✏️ Edit Profile
+                                    </Link>
+                                )}
+                            </div>
+
+                            {/* Stats */}
+                            <div className="flex gap-6 text-center">
+                                <div>
+                                    <p className="text-2xl font-bold text-primary">{stats.productCount}</p>
+                                    <p className="text-sm text-gray-600">Products</p>
+                                </div>
+                                <div>
+                                    <p className="text-2xl font-bold text-purple-600">{stats.profileViews}</p>
+                                    <p className="text-sm text-gray-600">Views</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="grid md:grid-cols-3 gap-6">
+                    {/* Left Column - About */}
+                    <div className="md:col-span-2">
+                        {/* Bio */}
+                        {profile.bio && (
+                            <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+                                <h2 className="text-2xl font-bold mb-4">About</h2>
+                                <p className="text-gray-700 whitespace-pre-wrap">{profile.bio}</p>
+                            </div>
+                        )}
+
+                        {/* Products */}
+                        {products.length > 0 && (
+                            <div className="bg-white rounded-lg shadow-lg p-6">
+                                <h2 className="text-2xl font-bold mb-4">Products</h2>
+                                <div className="grid md:grid-cols-3 gap-4">
+                                    {products.map(product => (
+                                        <Link
+                                            key={product._id}
+                                            to={`/marketplace/${product._id}`}
+                                            className="border rounded-lg overflow-hidden hover:shadow-md transition"
+                                        >
+                                            <img
+                                                src={product.imageUrl}
+                                                alt={product.name}
+                                                className="w-full h-32 object-cover"
+                                            />
+                                            <div className="p-2">
+                                                <p className="font-semibold text-sm">{product.name}</p>
+                                                <p className="text-primary font-bold">৳{product.price}</p>
+                                            </div>
+                                        </Link>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Right Column - Contact & Info */}
+                    <div className="space-y-6">
+                        {/* Contact Info */}
+                        <div className="bg-white rounded-lg shadow-lg p-6">
+                            <h2 className="text-xl font-bold mb-4">Contact Info</h2>
+
+                            {profile.phone && (
+                                <div className="mb-3">
+                                    <p className="text-sm text-gray-600">Phone</p>
+                                    <p className="font-semibold">📞 {profile.phone}</p>
+                                </div>
+                            )}
+
+                            {profile.address && (profile.address.city || profile.address.district) && (
+                                <div className="mb-3">
+                                    <p className="text-sm text-gray-600">Location</p>
+                                    <p className="font-semibold">
+                                        📍 {profile.address.city && `${profile.address.city}, `}
+                                        {profile.address.district && `${profile.address.district}, `}
+                                        {profile.address.country}
+                                    </p>
+                                </div>
+                            )}
+
+                            {user.email && (
+                                <div className="mb-3">
+                                    <p className="text-sm text-gray-600">Email</p>
+                                    <p className="font-semibold">✉️ {user.email}</p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Social Links */}
+                        {profile.socialLinks && Object.values(profile.socialLinks).some(link => link) && (
+                            <div className="bg-white rounded-lg shadow-lg p-6">
+                                <h2 className="text-xl font-bold mb-4">Social Links</h2>
+                                <div className="space-y-2">
+                                    {profile.socialLinks.facebook && (
+                                        <a
+                                            href={profile.socialLinks.facebook}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center gap-2 text-blue-600 hover:underline"
+                                        >
+                                            📘 Facebook
+                                        </a>
+                                    )}
+                                    {profile.socialLinks.instagram && (
+                                        <a
+                                            href={profile.socialLinks.instagram}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center gap-2 text-pink-600 hover:underline"
+                                        >
+                                            📷 Instagram
+                                        </a>
+                                    )}
+                                    {profile.socialLinks.twitter && (
+                                        <a
+                                            href={profile.socialLinks.twitter}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center gap-2 text-blue-400 hover:underline"
+                                        >
+                                            🐦 Twitter
+                                        </a>
+                                    )}
+                                    {profile.socialLinks.linkedin && (
+                                        <a
+                                            href={profile.socialLinks.linkedin}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center gap-2 text-blue-700 hover:underline"
+                                        >
+                                            💼 LinkedIn
+                                        </a>
+                                    )}
+                                    {profile.socialLinks.website && (
+                                        <a
+                                            href={profile.socialLinks.website}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center gap-2 text-gray-700 hover:underline"
+                                        >
+                                            🌐 Website
+                                        </a>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Member Info */}
+                        <div className="bg-white rounded-lg shadow-lg p-6">
+                            <h2 className="text-xl font-bold mb-4">Member Info</h2>
+                            <p className="text-sm text-gray-600 mb-2">
+                                Member since: <span className="font-semibold">{new Date(stats.memberSince).toLocaleDateString()}</span>
+                            </p>
+                            {profile.yearsInBusiness && (
+                                <p className="text-sm text-gray-600">
+                                    Years in business: <span className="font-semibold">{profile.yearsInBusiness}</span>
+                                </p>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+export default UserProfile;

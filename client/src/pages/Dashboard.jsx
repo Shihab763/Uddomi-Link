@@ -108,10 +108,62 @@ function Dashboard() {
               Enhance your account by adding more roles to access additional features.
             </p>
             <div className="flex gap-4 justify-center">
-              <button className="bg-primary text-white px-6 py-2 rounded hover:bg-green-800 transition">
+              <button
+                onClick={async () => {
+                  const reason = prompt('Why do you want to become an investor?');
+                  if (!reason) return;
+
+                  try {
+                    const response = await fetch('http://localhost:5000/api/role-requests', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${user.token}`
+                      },
+                      body: JSON.stringify({ requestedRole: 'investor', reason })
+                    });
+
+                    if (response.ok) {
+                      alert('Request submitted! Admin will review soon.');
+                    } else {
+                      const data = await response.json();
+                      alert(data.message || 'Error submitting request');
+                    }
+                  } catch (error) {
+                    alert('Error submitting request');
+                  }
+                }}
+                className="bg-primary text-white px-6 py-2 rounded hover:bg-green-800 transition"
+              >
                 Become an Investor
               </button>
-              <button className="bg-secondary text-dark px-6 py-2 rounded hover:bg-yellow-500 transition">
+              <button
+                onClick={async () => {
+                  const reason = prompt('Why do you want to register as a business owner?');
+                  if (!reason) return;
+
+                  try {
+                    const response = await fetch('http://localhost:5000/api/role-requests', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${user.token}`
+                      },
+                      body: JSON.stringify({ requestedRole: 'business-owner', reason })
+                    });
+
+                    if (response.ok) {
+                      alert('Request submitted! Admin will review soon.');
+                    } else {
+                      const data = await response.json();
+                      alert(data.message || 'Error submitting request');
+                    }
+                  } catch (error) {
+                    alert('Error submitting request');
+                  }
+                }}
+                className="bg-secondary text-dark px-6 py-2 rounded hover:bg-yellow-500 transition"
+              >
                 Register Business
               </button>
             </div>

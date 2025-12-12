@@ -2,7 +2,7 @@ const Product = require('../models/productModel');
 
 const getAllProducts = async (req, res) => {
     try {
-        const products = await Product.find({ isActive: true }).populate('seller', 'name email');
+        const products = await Product.find({ isActive: true, isApproved: true }).populate('seller', 'name email');
         res.json(products);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });

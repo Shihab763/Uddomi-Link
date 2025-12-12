@@ -10,8 +10,13 @@ app.use(cors());
 app.use(express.json());
 
 app.use('/api/users', require('./routes/userRoutes'));
+app.use('/api/profile', require('./routes/profileRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
+app.use('/api/admin', require('./routes/adminProductRoutes'));
+app.use('/api/admin', require('./routes/analyticsRoutes'));
 app.use('/api/roles', require('./routes/roleRoutes'));
+app.use('/api/role-requests', require('./routes/roleRequestRoutes'));
+app.use('/api/seller', require('./routes/sellerAnalyticsRoutes'));
 app.use('/api/products', require('./routes/productRoutes'));
 app.use('/api/orders', require('./routes/orderRoutes'));
 

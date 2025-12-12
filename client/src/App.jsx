@@ -10,6 +10,9 @@ import MyProducts from './pages/MyProducts';
 import ProductDetail from './pages/ProductDetail';
 import Cart from './pages/Cart';
 import OrderHistory from './pages/OrderHistory';
+import UserProfile from './pages/UserProfile';
+import EditProfile from './pages/EditProfile';
+import SellersDirectory from './pages/SellersDirectory';
 
 function App() {
   return (
@@ -25,6 +28,9 @@ function App() {
           <Route path="/cart" element={<Cart />} />
           <Route path="/orders" element={<OrderHistory />} />
           <Route path="/my-products" element={<MyProducts />} />
+          <Route path="/sellers" element={<SellersDirectory />} />
+          <Route path="/profile/:userId" element={<UserProfile />} />
+          <Route path="/profile/edit" element={<EditProfile />} />
           <Route
             path="/admin"
             element={

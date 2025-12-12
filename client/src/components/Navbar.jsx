@@ -2,7 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 
 function Navbar() {
   const navigate = useNavigate();
-  // Check if user is logged in
+  // user already logged in kina check kora
   const user = JSON.parse(localStorage.getItem('user'));
 
   const onLogout = () => {
@@ -19,6 +19,9 @@ function Navbar() {
         <div className="flex items-center space-x-6">
           <Link to="/marketplace" className="text-white hover:text-secondary transition font-medium">
             🛍️ Marketplace
+          </Link>
+          <Link to="/sellers" className="text-white hover:text-secondary transition font-medium">
+            🏪 Browse Sellers
           </Link>
           {user && user.roles && user.roles.includes('business-owner') && (
             <Link to="/my-products" className="text-white hover:text-secondary transition font-medium">
@@ -45,9 +48,9 @@ function Navbar() {
                   🔐 Admin Panel
                 </Link>
               )}
-              <span className="text-light hidden md:block">
+              <Link to={`/profile/${user._id}`} className="text-light hidden md:block hover:text-secondary transition">
                 Hello, <span className="text-secondary font-bold">{user.name}</span>
-              </span>
+              </Link>
               <button
                 onClick={onLogout}
                 className="bg-accent hover:bg-red-700 text-white px-4 py-2 rounded transition"
