@@ -13,6 +13,7 @@ import OrderHistory from './pages/OrderHistory';
 import UserProfile from './pages/UserProfile';
 import EditProfile from './pages/EditProfile';
 import SellersDirectory from './pages/SellersDirectory';
+import Portfolio from './pages/Portfolio';
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
           <Route path="/sellers" element={<SellersDirectory />} />
           <Route path="/profile/:userId" element={<UserProfile />} />
           <Route path="/profile/edit" element={<EditProfile />} />
+          <Route path="/portfolio" element={<Portfolio />} />
           <Route
             path="/admin"
             element={
