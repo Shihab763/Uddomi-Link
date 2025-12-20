@@ -21,6 +21,8 @@ app.use('/api/reviews', require('./routes/reviewRoutes'));
 app.use('/api/products', require('./routes/productRoutes'));
 app.use('/api/orders', require('./routes/orderRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
+app.use('/api/portfolios', require('./routes/portfolioRoutes'));
+
 // Database Connection
 const connectDB = async () => {
   try {
