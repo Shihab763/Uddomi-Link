@@ -47,8 +47,13 @@ const userSchema = mongoose.Schema({
     businessType: String,
     yearsInBusiness: Number,
 
+    // Stats
+    profileViews: { type: Number, default: 0 },
+    lastUpdated: Date
+  },  
+  
 
-    wishlist: [{
+  wishlist: [{
     itemId: {
         type: mongoose.Schema.Types.ObjectId,
         required: true
@@ -62,12 +67,8 @@ const userSchema = mongoose.Schema({
         type: Date,
         default: Date.now
     }
-}]
+  }] 
 
-    // Stats
-    profileViews: { type: Number, default: 0 },
-    lastUpdated: Date
-  }
 }, {
   timestamps: true
 });
