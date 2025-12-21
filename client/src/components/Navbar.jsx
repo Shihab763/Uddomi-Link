@@ -26,6 +26,9 @@ function Navbar() {
           <Link to="/portfolio" className="text-white hover:text-secondary transition font-medium">
             🎨 Portfolio
           </Link>
+          <Link to="/custom-orders" className="text-white hover:text-secondary transition font-medium">
+            ✨ Custom Orders
+          </Link>
           {user && user.roles && user.roles.includes('business-owner') && (
             <Link to="/my-products" className="text-white hover:text-secondary transition font-medium">
               📦 My Products
