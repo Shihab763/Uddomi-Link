@@ -1,9 +1,44 @@
 import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 
 function Navbar() {
   const navigate = useNavigate();
   // user already logged in kina check kora
   const user = JSON.parse(localStorage.getItem('user'));
+  
+  const [wishlistCount, setWishlistCount] = useState(0); 
+  
+  useEffect(() => {
+    if (user) {
+      fetchWishlistCount();
+    } else {
+      setWishlistCount(0); // Reset when no user
+    }
+  }, [user]);
+
+  const refreshWishlistCount = () => {
+  if (user) {
+    fetchWishlistCount();
+  }
+};
+
+  const fetchWishlistCount = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/wishlist/my', {
+        headers: {
+          'Authorization': `Bearer ${user.token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const total = data.products.length + data.portfolios.length + data.sellers.length;
+        setWishlistCount(total);
+      }
+    } catch (error) {
+      console.error('Error fetching wishlist count:', error);
+    }
+  };
 
   const onLogout = () => {
     localStorage.removeItem('user');
