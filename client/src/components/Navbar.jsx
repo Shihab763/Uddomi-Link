@@ -29,6 +29,14 @@ function Navbar() {
           <Link to="/custom-orders" className="text-white hover:text-secondary transition font-medium">
             ✨ Custom Orders
           </Link>
+          <Link to="/wishlist" className="text-white hover:text-secondary transition font-medium relative">
+            ❤️ Wishlist
+            {wishlistCount > 0 && (
+            <span className="absolute -top-2 -right-2 bg-accent text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+            {wishlistCount}
+            </span>
+            )}
+          </Link>
           {user && user.roles && user.roles.includes('business-owner') && (
             <Link to="/my-products" className="text-white hover:text-secondary transition font-medium">
               📦 My Products
