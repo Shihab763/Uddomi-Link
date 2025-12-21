@@ -66,13 +66,7 @@ const customOrderSchema = mongoose.Schema({
             type: Date,
             default: Date.now
         }
-    }],
-    finalProduct: {
-        description: String,
-        images: [String],
-        deliveryDate: Date,
-        amountPaid: Number
-    }
+    }]
 }, {
     timestamps: true
 });
