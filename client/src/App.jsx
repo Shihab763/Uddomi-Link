@@ -14,6 +14,7 @@ import UserProfile from './pages/UserProfile';
 import EditProfile from './pages/EditProfile';
 import SellersDirectory from './pages/SellersDirectory';
 import Portfolio from './pages/Portfolio';
+import CustomOrders from './pages/CustomOrders';
 
 function App() {
   return (
@@ -33,6 +34,8 @@ function App() {
           <Route path="/profile/:userId" element={<UserProfile />} />
           <Route path="/profile/edit" element={<EditProfile />} />
           <Route path="/portfolio" element={<Portfolio />} />
+          <Route path="/custom-orders" element={<CustomOrders />} />
+          <Route path="/custom-orders/:id" element={<CustomOrderDetail />} />
           <Route
             path="/admin"
             element={
