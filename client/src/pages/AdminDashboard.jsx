@@ -8,6 +8,10 @@ function AdminDashboard() {
     const [pendingProducts, setPendingProducts] = useState([]);
     const [roleRequests, setRoleRequests] = useState([]);
     const [analytics, setAnalytics] = useState(null);
+    const [reports, setReports] = useState([]);
+    const [reportsLoading, setReportsLoading] = useState(false);
+    const [reportsError, setReportsError] = useState("");
+
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState({
         total: 0,
@@ -30,6 +34,14 @@ function AdminDashboard() {
         fetchRoleRequests();
         fetchAnalytics();
     }, [navigate, user]);
+    
+    useEffect(() => {
+    if (activeTab === 'reports') {
+        fetchReports();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [activeTab]);
+
 
     const fetchUsers = async () => {
         try {
@@ -92,6 +104,52 @@ function AdminDashboard() {
             console.error('Error:', error);
         }
     };
+    const fetchReports = async () => {
+    try {
+        setReportsError("");
+        setReportsLoading(true);
+
+        const response = await fetch("http://localhost:5000/api/reports?status=pending", {
+            headers: {
+                Authorization: `Bearer ${user.token}`,
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to fetch reports");
+        }
+
+        const data = await response.json();
+        setReports(data);
+    } catch (error) {
+        console.error("fetchReports error:", error);
+        setReportsError("Failed to load reports.");
+    } finally {
+        setReportsLoading(false);
+    }
+};
+
+const resolveReport = async (reportId) => {
+    try {
+        const response = await fetch(`http://localhost:5000/api/reports/${reportId}`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${user.token}`,
+            },
+            body: JSON.stringify({ status: "resolved" }),
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to resolve report");
+        }
+
+        // Remove resolved report from UI
+        setReports(prev => prev.filter(r => r._id !== reportId));
+    } catch (error) {
+        alert("Failed to resolve report.");
+    }
+};
 
     const fetchAnalytics = async () => {
         try {
@@ -237,7 +295,8 @@ function AdminDashboard() {
 
             <div className="container mx-auto px-4 py-8">
                 <div className="bg-white rounded-lg shadow-lg mb-8">
-                    <div className="grid grid-cols-4 border-b">
+                    <div className="grid grid-cols-5 border-b">
+
                         <button
                             onClick={() => setActiveTab('users')}
                             className={`py-4 px-6 font-bold text-lg transition ${activeTab === 'users'
@@ -284,6 +343,21 @@ function AdminDashboard() {
                         >
                             📊 Analytics
                         </button>
+                        <button
+                            onClick={() => setActiveTab('reports')}
+                            className={`py-4 px-6 font-bold text-lg transition ${activeTab === 'reports'
+                                ? 'bg-primary text-white'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                }`}
+                        >
+                            🚩 Reports
+                            {reports.length > 0 && (
+                                <span className="ml-2 bg-red-600 text-white px-2 py-1 rounded-full text-sm">
+                                    {reports.length}
+                                </span>
+                            )}
+                        </button>
+
                     </div>
 
                     {activeTab === 'users' && (
@@ -461,6 +535,77 @@ function AdminDashboard() {
                             )}
                         </div>
                     )}
+                    {activeTab === 'reports' && (
+                        <div className="p-6">
+                            <h2 className="text-2xl font-bold mb-6">Reports</h2>
+
+                            {reportsLoading && (
+                                <div className="bg-white rounded-lg shadow-lg p-6">
+                                    Loading reports...
+                                </div>
+                            )}
+
+                            {reportsError && (
+                                <div className="bg-red-50 text-red-700 rounded-lg p-4">
+                                    {reportsError}
+                                </div>
+                            )}
+
+                            {!reportsLoading && !reportsError && reports.length === 0 && (
+                                <div className="bg-white rounded-lg shadow-lg p-6">
+                                    No pending reports 🎉
+                                </div>
+                            )}
+
+                            {!reportsLoading && !reportsError && reports.length > 0 && (
+                                <div className="bg-white rounded-lg shadow-lg overflow-x-auto">
+                                    <table className="min-w-full text-sm text-left">
+                                        <thead className="bg-gray-50 border-b">
+                                            <tr>
+                                                <th className="px-4 py-3">Seller</th>
+                                                <th className="px-4 py-3">Reporter</th>
+                                                <th className="px-4 py-3">Reason</th>
+                                                <th className="px-4 py-3">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {reports.map((r) => (
+                                                <tr key={r._id} className="border-b">
+                                                    <td className="px-4 py-3">
+                                                        <div className="font-semibold">{r.sellerId?.name}</div>
+                                                        <div className="text-xs text-gray-500">{r.sellerId?.email}</div>
+                                                    </td>
+
+                                                    <td className="px-4 py-3">
+                                                        <div className="font-semibold">{r.reporterId?.name}</div>
+                                                        <div className="text-xs text-gray-500">{r.reporterId?.email}</div>
+                                                    </td>
+
+                                                    <td className="px-4 py-3">
+                                                        <div className="font-semibold">{r.reason}</div>
+                                                        {r.details && (
+                                                            <div className="text-xs text-gray-600 mt-1">
+                                                                {r.details}
+                                                        </div>
+                                                    )}
+                                                </td>
+
+                                                <td className="px-4 py-3">
+                                                    <button
+                                                        onClick={() => resolveReport(r._id)}
+                                                        className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm"
+                                                    >
+                                                        Resolved
+                                                    </button>
+                                                </td>
+                                           </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                )}
 
                     {activeTab === 'analytics' && analytics && (
                         <div className="p-6">

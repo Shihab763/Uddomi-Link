@@ -24,7 +24,7 @@ app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/portfolios', require('./routes/portfolioRoutes'));
 app.use('/api/custom-orders', require('./routes/customOrderRoutes'));
 app.use('/api/wishlist', require('./routes/wishlistRoutes'));
-
+app.use('/api/reports', require('./routes/reportRoutes'));
 // Database Connection
 const connectDB = async () => {
   try {

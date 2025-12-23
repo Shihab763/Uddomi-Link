@@ -1,19 +1,28 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import RoleRequestModal from '../components/RoleRequestModal';
+import ReportSellerModal from "../components/ReportSellerModal";
 
 function UserProfile() {
     const { userId } = useParams();
     const navigate = useNavigate();
     const [profileData, setProfileData] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
     const [showRoleModal, setShowRoleModal] = useState(false);
+    const [showReportModal, setShowReportModal] = useState(false);
+    const [reportSubmitting, setReportSubmitting] = useState(false);
+    const [reportError, setReportError] = useState("");
+    const [reportSuccess, setReportSuccess] = useState("");
+
 
     const currentUser = JSON.parse(localStorage.getItem('user'));
-    const isOwnProfile = currentUser && currentUser._id === userId;
     const isRegularUser = currentUser?.roles?.includes('user') &&
         !currentUser?.roles?.includes('business-owner') &&
         !currentUser?.roles?.includes('ngo');
+
+    const currentUserId = currentUser?._id;
+        
 
     useEffect(() => {
         fetchProfile();
@@ -21,6 +30,10 @@ function UserProfile() {
 
     const fetchProfile = async () => {
         try {
+            setError("");
+            setLoading(true);
+            setProfileData(null);
+
             const headers = {};
             if (currentUser && currentUser.token) {
                 headers['Authorization'] = `Bearer ${currentUser.token}`;
@@ -33,9 +46,14 @@ function UserProfile() {
             if (response.ok) {
                 const data = await response.json();
                 setProfileData(data);
+            } else {
+                setError("User not found or failed to load.");
+                setProfileData(null);
             }
         } catch (error) {
             console.error('Error:', error);
+            setError("Failed to load profile.");
+            setProfileData(null);
         } finally {
             setLoading(false);
         }
@@ -63,6 +81,45 @@ function UserProfile() {
         }
     };
 
+    const handleReportSubmit = async ({ reason, details }) => {
+        setReportSubmitting(true);
+        setReportError("");
+        setReportSuccess("");
+
+        try {
+    // We’ll wire backend later, but this is already clean and ready.
+    // This will NOT break the UI if backend isn’t ready yet — it will show an error message.
+
+            const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
+            const token = currentUser?.token || currentUser?.accessToken || "";
+
+            const res = await fetch(`${API_BASE}/api/reports`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                },
+                body: JSON.stringify({
+                sellerId: viewedUserId,
+                reason,
+                details,
+            }),
+        });
+
+        if (!res.ok) {
+            const msg = await res.text();
+            throw new Error(msg || "Failed to submit report");
+        }
+
+        setReportSuccess("Report submitted successfully.");
+        setShowReportModal(false);
+      } catch (err) {
+        setReportError("Could not submit report right now. (Backend will be added next.)");
+      } finally {
+        setReportSubmitting(false);
+      }
+    };
+
     if (loading) {
         return (
             <div className="min-h-screen bg-light flex items-center justify-center">
@@ -71,6 +128,15 @@ function UserProfile() {
         );
     }
 
+    if (error) {
+        return (
+            <div className="min-h-screen bg-light flex items-center justify-center">
+                <p className="text-xl text-red-600">{error}</p>
+            </div>
+        );
+    }
+
+
     if (!profileData) {
         return (
             <div className="min-h-screen bg-light flex items-center justify-center">
@@ -78,8 +144,18 @@ function UserProfile() {
             </div>
         );
     }
+    
+    
+
 
     const { user, products, stats } = profileData;
+    const viewedUser = user;
+    const viewedUserId = viewedUser?._id;
+
+    const isLoggedIn = !!currentUser;
+    const isSellerProfile = viewedUser?.roles?.includes("business-owner");
+    const isOwnProfile = currentUserId && viewedUserId && currentUserId === viewedUserId;
+
     const profile = user.profile || {};
 
     return (
@@ -137,6 +213,8 @@ function UserProfile() {
                                         )}
                                     </div>
                                 )}
+                                
+
                             </div>
 
                             {/* Stats */}
@@ -295,9 +373,48 @@ function UserProfile() {
                                 </p>
                             )}
                         </div>
+                        {/* Report Seller */}
+                        {isLoggedIn && isSellerProfile && !isOwnProfile && (
+                            <div className="bg-white rounded-lg shadow-lg p-6">
+                                <h2 className="text-lg font-bold mb-3 text-red-600">Report Seller</h2>
+                                <p className="text-sm text-gray-600 mb-4">
+                                    If you believe this seller has violated platform rules, you may report them for admin review.
+                                </p>
+                                <button
+                                    onClick={() => {
+                                        setReportError("");
+                                        setReportSuccess("");
+                                        setShowReportModal(true);
+                                    }}
+                                    className="w-full rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
+                                >
+                                    🚩 Report This Seller
+                                </button>
+                            </div>
+                        )}
+
                     </div>
                 </div>
             </div>
+            {reportError && (
+                <div className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-700">
+                    {reportError}
+                </div>
+            )}
+
+            {reportSuccess && (
+                <div className="mt-4 rounded-md bg-green-50 p-3 text-sm text-green-700">
+                    {reportSuccess}
+                </div>
+            )}
+
+            <ReportSellerModal
+                isOpen={showReportModal}
+                onClose={() => setShowReportModal(false)}
+                onSubmit={handleReportSubmit}
+                sellerName={viewedUser?.name || viewedUser?.fullName || viewedUser?.email}
+            />
+
         </div>
     );
 }
