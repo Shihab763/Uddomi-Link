@@ -29,6 +29,7 @@ app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/portfolios', require('./routes/portfolioRoutes'));
 app.use('/api/bookings', require('./routes/bookingRoutes'));
 app.use('/api/trainings', require('./routes/trainingRoutes'));
+app.use('/api/mentorship', require('./routes/mentorshipRoutes'));
 app.use('/api/custom-orders', require('./routes/customOrderRoutes'));
 app.use('/api/wishlist', require('./routes/wishlistRoutes'));
 app.use('/api/reports', require('./routes/reportRoutes'));
