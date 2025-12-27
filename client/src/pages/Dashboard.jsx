@@ -110,6 +110,60 @@ function Dashboard() {
           <p className="text-sm text-gray-600 mt-2">View booking requests</p>
           </Link>
 
+          
+          {user?.roles?.includes("ngo") && (
+            <Link
+              to="/creators"
+              className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition text-center border-t-4 border-red-600"
+            >
+            
+            <div className="text-4xl mb-3">👩‍🎨</div>
+            <h3 className="text-xl font-bold text-dark">Creators</h3>
+            <p className="text-sm text-gray-600 mt-2">Browse Creators</p>
+            
+            </Link>
+          )}
+
+          {user?.roles?.includes("ngo") && (
+            <Link
+              to="/mentees"
+              className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition text-center border-t-4 border-green-600"
+            >
+    
+            <div className="text-4xl mb-3">👥</div>
+            <h3 className="text-xl font-bold text-dark">Mentees</h3>
+            <p className="text-sm text-gray-600 mt-2">Mnanage Your Mentees</p>
+    
+            </Link>
+          )}
+
+          
+          {user?.roles?.includes("business-owner") && (
+            <Link
+              to="/mentorship-offers"
+              className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition text-center border-t-4 border-purple-600"
+            >
+    
+            <div className="text-4xl mb-3">🤝</div>
+            <h3 className="text-xl font-bold text-dark">Mentorship Offers</h3>
+            <p className="text-sm text-gray-600 mt-2">Accept or reject offers</p>
+    
+            </Link>
+          )}
+
+          {user?.roles?.includes("business-owner") && (
+            <Link
+              to="/mentors"
+              className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition text-center border-t-4 border-red-600r"
+            >
+    
+            <div className="text-4xl mb-3">🧑‍🏫</div>
+            <h3 className="text-xl font-bold text-dark">Mentors</h3>
+            <p className="text-sm text-gray-600 mt-2">Plans & recommendations</p>
+    
+            </Link>
+          )}
+
 
           <Link
             to={`/profile/${user._id}`}
@@ -119,6 +173,20 @@ function Dashboard() {
             <h3 className="text-lg font-bold text-dark">My Profile</h3>
             <p className="text-sm text-gray-600 mt-2">View & edit</p>
           </Link>
+
+          {user?.roles?.includes("business-owner") && (
+            <Link
+              to="/skill-hub"
+              className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition text-center border-t-4 border-yellow-600"
+            >
+    
+            <div className="text-4xl mb-3">📚</div>
+            <h3 className="text-xl font-bold text-dark">Skill Hub</h3>
+            <p className="text-gray-600 text-sm mt-2">Workshops & tutorials</p>
+    
+            </Link>
+          )}
+
         </div>
       </div>
     </div>
