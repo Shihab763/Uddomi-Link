@@ -16,6 +16,9 @@ import SellersDirectory from './pages/SellersDirectory';
 import Portfolio from './pages/Portfolio';
 import MyBookings from './pages/MyBookings';
 import BookingRequests from './pages/BookingRequests';
+import SkillHub from './pages/SkillHub';
+import NgoTrainings from './pages/NgoTrainings';
+
 
 import CustomOrders from './pages/CustomOrders';
 import Wishlist from './pages/Wishlist';
@@ -42,6 +45,23 @@ function App() {
           <Route path="/portfolio" element={<Portfolio />} />
           <Route path="/my-bookings" element={<MyBookings />} />
           <Route path="/booking-requests" element={<BookingRequests />} />
+          <Route
+              path="/skill-hub"
+              element={
+                <ProtectedRoute requiredRole="business-owner">
+                <SkillHub />
+                </ProtectedRoute>
+              }
+          />
+
+          <Route
+              path="/ngo/trainings"
+              element={
+                <ProtectedRoute requiredRole="ngo">
+                <NgoTrainings />
+                </ProtectedRoute>
+              }
+          />
 
 
           <Route path="/custom-orders" element={<CustomOrders />} />

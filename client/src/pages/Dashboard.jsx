@@ -119,6 +119,20 @@ function Dashboard() {
             <h3 className="text-lg font-bold text-dark">My Profile</h3>
             <p className="text-sm text-gray-600 mt-2">View & edit</p>
           </Link>
+
+          {user?.roles?.includes("business-owner") && (
+            <Link
+              to="/skill-hub"
+              className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition text-center border-t-4 border-yellow-600"
+            >
+    
+            <div className="text-4xl mb-3">📚</div>
+            <h3 className="text-xl font-bold text-dark">Skill Hub</h3>
+            <p className="text-gray-600 text-sm mt-2">Workshops & tutorials</p>
+    
+            </Link>
+          )}
+
         </div>
       </div>
     </div>

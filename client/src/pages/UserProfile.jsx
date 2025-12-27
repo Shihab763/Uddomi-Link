@@ -266,6 +266,16 @@ function UserProfile() {
                                                 📩 Booking Requests
                                             </Link>
                                         )}
+                                        
+                                        {currentUser?.roles?.includes("ngo") && (
+                                            <Link
+                                                to="/ngo/trainings"
+                                                className="inline-block bg-primary text-white px-6 py-2 rounded hover:opacity-90 transition font-bold"
+                                            >
+                                                🎓 Trainings
+                                            </Link>
+                                        )}
+
 
                                         {isRegularUser && (
                                             <button
