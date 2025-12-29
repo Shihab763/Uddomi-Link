@@ -133,6 +133,39 @@ function Mentees() {
     }
   };
 
+  const endMentorship = async (offerId) => {
+  const ok = window.confirm("End mentorship? This will remove the connection immediately.");
+  if (!ok) return;
+
+  try {
+    setMsg("");
+    setItemsError("");
+
+    const res = await fetch(`${API_BASE}/api/mentorship/offers/${offerId}/end`, {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(text || "Failed to end mentorship");
+    }
+
+    // Remove from mentees list
+    setMentees((prev) => prev.filter((x) => x.offerId !== offerId));
+
+    // If details panel open, close it (optional safety)
+    setMode(null);
+    setItems([]);
+
+    setMsg("Mentorship ended.");
+    setTimeout(() => setMsg(""), 2500);
+  } catch (err) {
+    setItemsError(err.message || "Could not end mentorship.");
+  }
+};
+
+
   const addPlan = async () => {
     try {
       setMsg("");
@@ -262,6 +295,13 @@ function Mentees() {
                     >
                       🎯 Recommendations
                     </button>
+                    <button
+                        onClick={() => endMentorship(m.offerId)}
+                        className="rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
+                    >
+                        🛑 End Mentorship
+                    </button>
+
                     <Link
                       to={`/profile/${mentee._id}`}
                       className="rounded-md bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-300"

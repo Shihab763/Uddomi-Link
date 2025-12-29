@@ -115,6 +115,38 @@ function Mentors() {
       setItemsLoading(false);
     }
   };
+  const endMentorship = async (offerId) => {
+  const ok = window.confirm("End mentorship? This will remove the connection immediately.");
+  if (!ok) return;
+
+  try {
+    setMsg("");
+    setItemsError("");
+
+    const res = await fetch(`${API_BASE}/api/mentorship/offers/${offerId}/end`, {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(text || "Failed to end mentorship");
+    }
+
+    // Remove from mentors list
+    setMentors((prev) => prev.filter((x) => x.offerId !== offerId));
+
+    // close details view if open
+    setMode(null);
+    setItems([]);
+
+    setMsg("Mentorship ended.");
+    setTimeout(() => setMsg(""), 2500);
+  } catch (err) {
+    setItemsError(err.message || "Could not end mentorship.");
+  }
+};
+
 
   const completePlan = async (id) => {
     try {
@@ -189,7 +221,7 @@ function Mentors() {
             <p className="text-sm text-gray-600 mt-2">
               Accept a mentorship offer to see mentors here.
             </p>
-            <Link to="/dashboard" className="inline-block mt-4 bg-primary text-white px-6 py-2 rounded hover:opacity-90 font-bold">
+            <Link to="/" className="inline-block mt-4 bg-primary text-white px-6 py-2 rounded hover:opacity-90 font-bold">
               Back to Dashboard
             </Link>
           </div>
@@ -217,6 +249,13 @@ function Mentors() {
                     >
                       🎯 Recommendations
                     </button>
+                    <button
+                        onClick={() => endMentorship(m.offerId)}
+                        className="rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
+                    >
+                    🛑 End Mentorship
+                 </button>
+
                   </div>
                 </div>
               );

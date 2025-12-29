@@ -8,6 +8,7 @@ const {
   createOffer,
   getMyOffers,
   updateOfferStatus,
+  endMentorship,
   getMyMentors,
   getMyMentees,
   createPlan,
@@ -27,6 +28,9 @@ router.get("/creators", protect, getCreators);
 router.post("/offers", protect, createOffer);
 router.get("/offers/my", protect, getMyOffers);
 router.patch("/offers/:id", protect, updateOfferStatus);
+
+// ✅ NEW: end mentorship (either side)
+router.patch("/offers/:id/end", protect, endMentorship);
 
 // Mentors / Mentees
 router.get("/mentors", protect, getMyMentors);

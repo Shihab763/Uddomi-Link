@@ -18,8 +18,20 @@ const mentorshipOfferSchema = new mongoose.Schema(
       enum: ["pending", "accepted", "rejected"],
       default: "pending",
     },
+
+    // ✅ NEW: mentorship can be ended by either side
+    endedAt: {
+      type: Date,
+      default: null,
+    },
+    endedBy: {
+      type: String,
+      enum: ["ngo", "business-owner", "system"],
+      default: null,
+    },
   },
   { timestamps: true }
 );
 
 module.exports = mongoose.model("MentorshipOffer", mentorshipOfferSchema);
+
