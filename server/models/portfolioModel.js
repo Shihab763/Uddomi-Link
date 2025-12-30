@@ -1,11 +1,6 @@
 const mongoose = require('mongoose');
 
 const portfolioSchema = mongoose.Schema({
-    creator: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
-    },
     title: {
         type: String,
         required: [true, 'Please add a title']
@@ -14,66 +9,62 @@ const portfolioSchema = mongoose.Schema({
         type: String,
         required: [true, 'Please add a description']
     },
+    mediaType: {
+        type: String,
+        required: true,
+        enum: ['image', 'video', 'document']
+    },
+    mediaUrl: {
+        type: String,
+        required: [true, 'Please add media URL']
+    },
+    thumbnailUrl: {
+        type: String
+    },
     category: {
         type: String,
         required: true,
-        enum: ['artwork', 'handicraft', 'textile', 'pottery', 'jewelry', 'performance', 'service', 'other']
+        enum: ['painting', 'music', 'dance', 'craft', 'textile', 'agriculture', 'food', 'design', 'other']
     },
-    media: [{
-        url: {
-            type: String,
-            required: true
-        },
-        type: {
-            type: String,
-            enum: ['image', 'video'],
-            default: 'image'
-        },
-        caption: String,
-        thumbnail: Boolean
-    }],
     tags: [{
-        type: String,
-        trim: true
+        type: String
     }],
     skills: [{
-        type: String,
-        trim: true
+        type: String
     }],
-    priceRange: {
-        min: Number,
-        max: Number,
-        currency: {
-            type: String,
-            default: 'BDT'
-        }
-    },
-    availability: {
-        type: String,
-        enum: ['available', 'busy', 'limited', 'unavailable'],
-        default: 'available'
-    },
-    featured: {
+    acceptsCustomOrders: {
         type: Boolean,
         default: false
     },
-    isPublished: {
+    priceRange: {
+        min: { type: Number, min: 0 },
+        max: { type: Number, min: 0 }
+    },
+    creator: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
+    viewCount: {
+        type: Number,
+        default: 0
+    },
+    favoriteCount: {
+        type: Number,
+        default: 0
+    },
+    isActive: {
         type: Boolean,
         default: true
     },
-    views: {
-        type: Number,
-        default: 0
-    },
-    likes: {
-        type: Number,
-        default: 0
+    customOrderEnabled: {
+        type: Boolean,
+        default: false
     }
 }, {
     timestamps: true
 });
 
-// Index for search
 portfolioSchema.index({ title: 'text', description: 'text', tags: 'text', skills: 'text' });
 
 module.exports = mongoose.model('Portfolio', portfolioSchema);
