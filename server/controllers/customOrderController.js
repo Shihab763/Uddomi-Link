@@ -1,158 +1,212 @@
 const CustomOrder = require('../models/customOrderModel');
+const Portfolio = require('../models/portfolioModel');
+const User = require('../models/userModel');
+const { AnalyticsEvent, UserAnalytics } = require('../models/analyticsModel');
 
-// Create custom order request (NO EMAIL)
 const createCustomOrder = async (req, res) => {
     try {
-        const { sellerId, title, description, category, budget, deadline, referenceImages, specifications } = req.body;
+        const { title, description, requirements, budgetRange, deadline, portfolioItemId, creatorId } = req.body;
+
+        const creator = await User.findById(creatorId);
+        if (!creator) {
+            return res.status(404).json({ message: 'Creator not found' });
+        }
+
+        if (!creator.roles || (!creator.roles.includes('business-owner') && !creator.roles.includes('artist'))) {
+            return res.status(400).json({ message: 'User does not accept custom orders' });
+        }
 
         const customOrder = await CustomOrder.create({
-            customer: req.user._id,
-            seller: sellerId,
             title,
             description,
-            category,
-            budget,
-            deadline,
-            referenceImages,
-            specifications,
+            requirements,
+            budgetRange: {
+                min: parseFloat(budgetRange.min),
+                max: parseFloat(budgetRange.max)
+            },
+            deadline: new Date(deadline),
+            customer: req.user._id,
+            creator: creatorId,
+            portfolioItem: portfolioItemId,
             status: 'pending'
         });
 
-        console.log('📝 Custom Order Created:', customOrder._id);
-        
+        if (portfolioItemId) {
+            await Portfolio.findByIdAndUpdate(portfolioItemId, {
+                $inc: { viewCount: 1 }
+            });
+
+            await AnalyticsEvent.create({
+                user: req.user._id,
+                eventType: 'portfolio_custom_request',
+                targetId: portfolioItemId,
+                targetType: 'portfolio',
+                metadata: { orderId: customOrder._id }
+            });
+        }
+
+        await AnalyticsEvent.create({
+            user: req.user._id,
+            eventType: 'custom_order_request',
+            targetId: customOrder._id,
+            targetType: 'custom_order',
+            metadata: { creatorId: creatorId, portfolioItemId }
+        });
+
+        await UserAnalytics.findOneAndUpdate(
+            { user: creatorId },
+            { $inc: { totalCustomOrders: 1 } },
+            { upsert: true, new: true }
+        );
+
         res.status(201).json(customOrder);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
 
-// Get orders where I'm the seller
-const getOrdersForSeller = async (req, res) => {
+const getMyCustomOrders = async (req, res) => {
     try {
-        const { status } = req.query;
-        let filter = { seller: req.user._id };
+        let filter = {};
 
-        if (status) filter.status = status;
-
-        const orders = await CustomOrder.find(filter)
-            .populate('customer', 'name email profileImage')
-            .sort({ createdAt: -1 });
-
-        res.json(orders);
-    } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
-    }
-};
-
-// Get orders where I'm the customer
-const getOrdersForCustomer = async (req, res) => {
-    try {
-        const { status } = req.query;
-        let filter = { customer: req.user._id };
-
-        if (status) filter.status = status;
-
-        const orders = await CustomOrder.find(filter)
-            .populate('seller', 'name email profileImage')
-            .sort({ createdAt: -1 });
-
-        res.json(orders);
-    } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
-    }
-};
-
-// Get single order
-const getOrderById = async (req, res) => {
-    try {
-        const order = await CustomOrder.findById(req.params.id)
-            .populate('customer', 'name email profileImage phone')
-            .populate('seller', 'name email profileImage bio skills');
-
-        if (!order) {
-            return res.status(404).json({ message: 'Order not found' });
+        if (req.user.roles && req.user.roles.includes('business-owner')) {
+            filter.creator = req.user._id;
+        } else {
+            filter.customer = req.user._id;
         }
 
-        // Check authorization
-        if (order.customer._id.toString() !== req.user._id.toString() && 
-            order.seller._id.toString() !== req.user._id.toString()) {
+        const { status } = req.query;
+        if (status) {
+            filter.status = status;
+        }
+
+        const customOrders = await CustomOrder.find(filter)
+            .populate('customer', 'name email profileImage')
+            .populate('creator', 'name email profileImage')
+            .populate('portfolioItem', 'title thumbnailUrl')
+            .sort({ createdAt: -1 });
+
+        res.json(customOrders);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+const getCustomOrderById = async (req, res) => {
+    try {
+        const customOrder = await CustomOrder.findById(req.params.id)
+            .populate('customer', 'name email profileImage phone')
+            .populate('creator', 'name email profileImage phone')
+            .populate('portfolioItem', 'title thumbnailUrl mediaUrl');
+
+        if (!customOrder) {
+            return res.status(404).json({ message: 'Custom order not found' });
+        }
+
+        const isAuthorized = customOrder.customer._id.toString() === req.user._id.toString() ||
+            customOrder.creator._id.toString() === req.user._id.toString();
+
+        if (!isAuthorized) {
             return res.status(403).json({ message: 'Not authorized to view this order' });
         }
 
-        res.json(order);
+        res.json(customOrder);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
 
-// Update order (seller response) - NO EMAIL
-const updateOrder = async (req, res) => {
+const updateCustomOrderStatus = async (req, res) => {
     try {
-        const order = await CustomOrder.findById(req.params.id);
+        const { status, finalPrice, deliveryDate, cancellationReason } = req.body;
 
-        if (!order) {
-            return res.status(404).json({ message: 'Order not found' });
+        const customOrder = await CustomOrder.findById(req.params.id);
+
+        if (!customOrder) {
+            return res.status(404).json({ message: 'Custom order not found' });
         }
 
-        // Check if user is the seller
-        if (order.seller.toString() !== req.user._id.toString()) {
-            return res.status(403).json({ message: 'Only the seller can respond to this order' });
+        if (customOrder.creator.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: 'Not authorized to update this order' });
         }
 
-        const { status, sellerResponse, message } = req.body;
+        customOrder.status = status || customOrder.status;
+        if (finalPrice) customOrder.finalPrice = finalPrice;
+        if (deliveryDate) customOrder.deliveryDate = new Date(deliveryDate);
+        if (cancellationReason) customOrder.cancellationReason = cancellationReason;
 
-        if (status) order.status = status;
-        if (sellerResponse) {
-            order.sellerResponse = {
-                ...sellerResponse,
-                responseDate: new Date()
-            };
-        }
+        await customOrder.save();
 
-        // Add to conversation if message provided
-        if (message) {
-            order.conversation.push({
-                sender: req.user._id,
-                message
+        if (status === 'completed') {
+            await AnalyticsEvent.create({
+                user: req.user._id,
+                eventType: 'custom_order_completion',
+                targetId: customOrder._id,
+                targetType: 'custom_order',
+                metadata: { customerId: customOrder.customer, finalPrice }
             });
         }
 
-        await order.save();
-        console.log('✅ Custom Order Updated:', order._id, 'Status:', status);
-        
-        res.json(order);
+        res.json(customOrder);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
 
-// Add message to conversation - NO EMAIL
-const addMessage = async (req, res) => {
+const addMessageToOrder = async (req, res) => {
     try {
-        const order = await CustomOrder.findById(req.params.id);
-
-        if (!order) {
-            return res.status(404).json({ message: 'Order not found' });
-        }
-
-        // Check authorization
-        if (order.customer.toString() !== req.user._id.toString() && 
-            order.seller.toString() !== req.user._id.toString()) {
-            return res.status(403).json({ message: 'Not authorized to message this order' });
-        }
-
         const { message, attachments } = req.body;
 
-        order.conversation.push({
+        const customOrder = await CustomOrder.findById(req.params.id);
+
+        if (!customOrder) {
+            return res.status(404).json({ message: 'Custom order not found' });
+        }
+
+        const isAuthorized = customOrder.customer.toString() === req.user._id.toString() ||
+            customOrder.creator.toString() === req.user._id.toString();
+
+        if (!isAuthorized) {
+            return res.status(403).json({ message: 'Not authorized to message on this order' });
+        }
+
+        customOrder.messages.push({
             sender: req.user._id,
             message,
             attachments: attachments || []
         });
 
-        await order.save();
-        console.log('💬 Message added to order:', order._id);
-        
-        res.json(order.conversation);
+        await customOrder.save();
+
+        res.json(customOrder);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+const rateCustomOrder = async (req, res) => {
+    try {
+        const { rating, review } = req.body;
+
+        const customOrder = await CustomOrder.findById(req.params.id);
+
+        if (!customOrder) {
+            return res.status(404).json({ message: 'Custom order not found' });
+        }
+
+        if (customOrder.status !== 'completed') {
+            return res.status(400).json({ message: 'Can only rate completed orders' });
+        }
+
+        if (customOrder.customer.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: 'Only customer can rate this order' });
+        }
+
+        customOrder.rating = rating;
+        customOrder.review = review;
+        await customOrder.save();
+
+        res.json(customOrder);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
@@ -160,9 +214,9 @@ const addMessage = async (req, res) => {
 
 module.exports = {
     createCustomOrder,
-    getOrdersForSeller,
-    getOrdersForCustomer,
-    getOrderById,
-    updateOrder,
-    addMessage
+    getMyCustomOrders,
+    getCustomOrderById,
+    updateCustomOrderStatus,
+    addMessageToOrder,
+    rateCustomOrder
 };
