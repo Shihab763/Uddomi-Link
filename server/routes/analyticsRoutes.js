@@ -1,19 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const {
-    getUserAnalytics,
-    getPortfolioAnalytics,
-    getSearchAnalytics,
-    getWishlistAnalytics,
-    getAdminAnalytics
-} = require('../controllers/analyticsController');
-const { protect } = require('../middleware/authMiddleware');
-const { adminMiddleware } = require('../middleware/adminMiddleware');
+const analyticsController = require('../controllers/analyticsController');
+const auth = require('../middleware/auth');
 
-router.get('/user', protect, getUserAnalytics);
-router.get('/portfolio/:portfolioId', protect, getPortfolioAnalytics);
-router.get('/search', protect, getSearchAnalytics);
-router.get('/wishlist', protect, getWishlistAnalytics);
-router.get('/admin', protect, adminMiddleware, getAdminAnalytics);
+router.get('/user', auth, analyticsController.getUserAnalytics);
+router.get('/portfolio/:portfolioId', auth, analyticsController.getPortfolioAnalytics);
+router.get('/search', auth, analyticsController.getSearchAnalytics);
+router.get('/wishlist', auth, analyticsController.getWishlistAnalytics);
+router.get('/admin', auth, analyticsController.getAdminAnalytics);
 
 module.exports = router;
