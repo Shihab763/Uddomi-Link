@@ -31,6 +31,7 @@ app.use('/api/bookings', require('./routes/bookingRoutes'));
 app.use('/api/custom-orders', require('./routes/customOrderRoutes'));
 app.use('/api/wishlist', require('./routes/wishlistRoutes'));
 app.use('/api/reports', require('./routes/reportRoutes'));
+app.use('/api/search', require('./routes/searchRoutes'));
 // Database Connection
 const connectDB = async () => {
   try {
