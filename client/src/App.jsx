@@ -16,7 +16,7 @@ import SellersDirectory from './pages/SellersDirectory';
 import Portfolio from './pages/Portfolio';
 import MyBookings from './pages/MyBookings';
 import BookingRequests from './pages/BookingRequests';
-
+import AdvancedSearchPage from './pages/AdvancedSearchPage';
 import CustomOrders from './pages/CustomOrders';
 import Wishlist from './pages/Wishlist';
 
@@ -42,6 +42,7 @@ function App() {
           <Route path="/portfolio" element={<Portfolio />} />
           <Route path="/my-bookings" element={<MyBookings />} />
           <Route path="/booking-requests" element={<BookingRequests />} />
+          <Route path="/search" element={<AdvancedSearchPage />} />
 
 
           <Route path="/custom-orders" element={<CustomOrders />} />
