@@ -1,72 +1,66 @@
 const mongoose = require('mongoose');
 
 const customOrderSchema = mongoose.Schema({
-    customer: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
-    },
-    seller: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
-    },
     title: {
         type: String,
-        required: [true, 'Please add a title for your request']
+        required: [true, 'Please add a title']
     },
     description: {
         type: String,
-        required: [true, 'Please describe what you need']
+        required: [true, 'Please add description']
     },
-    category: {
+    requirements: {
         type: String,
-        required: true,
-        enum: ['artwork', 'handicraft', 'textile', 'jewelry', 'furniture', 'food', 'service', 'other']
+        required: true
     },
-    budget: {
-        type: Number,
-        required: true,
-        min: 0
+    budgetRange: {
+        min: { type: Number, required: true, min: 0 },
+        max: { type: Number, required: true, min: 0 }
     },
     deadline: {
         type: Date,
         required: true
     },
-    referenceImages: [{
-        url: String,
-        caption: String
-    }],
-    specifications: {
-        dimensions: String,
-        materials: [String],
-        colors: [String],
-        quantity: Number,
-        otherRequirements: String
-    },
     status: {
         type: String,
-        enum: ['pending', 'reviewed', 'quoted', 'accepted', 'rejected', 'in_progress', 'completed', 'cancelled'],
+        enum: ['pending', 'accepted', 'rejected', 'in_progress', 'completed', 'cancelled'],
         default: 'pending'
     },
-    sellerResponse: {
-        message: String,
-        quotedPrice: Number,
-        estimatedDelivery: Date,
-        responseDate: Date
+    customer: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
     },
-    conversation: [{
-        sender: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'User'
-        },
+    creator: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
+    portfolioItem: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Portfolio'
+    },
+    messages: [{
+        sender: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
         message: String,
         attachments: [String],
-        timestamp: {
-            type: Date,
-            default: Date.now
-        }
-    }]
+        timestamp: { type: Date, default: Date.now }
+    }],
+    finalPrice: {
+        type: Number,
+        min: 0
+    },
+    deliveryDate: {
+        type: Date
+    },
+    rating: {
+        type: Number,
+        min: 1,
+        max: 5
+    },
+    review: {
+        type: String
+    }
 }, {
     timestamps: true
 });
