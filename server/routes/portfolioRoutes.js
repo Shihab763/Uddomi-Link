@@ -1,25 +1,22 @@
 const express = require('express');
 const router = express.Router();
 const {
-    getAllPortfolios,
-    getPortfolioById,
     createPortfolio,
+    getPortfolioItems,
+    getPortfolioById,
     updatePortfolio,
     deletePortfolio,
     getMyPortfolios,
-    toggleLike
+    incrementFavoriteCount
 } = require('../controllers/portfolioController');
 const { protect } = require('../middleware/authMiddleware');
 
-// Public routes
-router.get('/', getAllPortfolios);
+router.get('/', getPortfolioItems);
 router.get('/:id', getPortfolioById);
-
-// Protected routes
 router.post('/', protect, createPortfolio);
 router.put('/:id', protect, updatePortfolio);
 router.delete('/:id', protect, deletePortfolio);
-router.get('/my/portfolios', protect, getMyPortfolios);
-router.post('/:id/like', protect, toggleLike);
+router.get('/creator/my-portfolios', protect, getMyPortfolios);
+router.post('/:id/favorite', protect, incrementFavoriteCount);
 
 module.exports = router;
