@@ -1,153 +1,165 @@
-const User = require('../models/userModel');
-const Product = require('../models/productModel');
-const Portfolio = require('../models/portfolioModel');
+const Wishlist = require('../models/wishlistModel');
+const { AnalyticsEvent } = require('../models/analyticsModel');
 
-// Add to wishlist
+const getMyWishlist = async (req, res) => {
+    try {
+        let wishlist = await Wishlist.findOne({ user: req.user._id })
+            .populate({
+                path: 'items.itemId',
+                select: 'name title price thumbnailUrl mediaUrl creator profileImage',
+                populate: {
+                    path: 'creator',
+                    select: 'name profileImage'
+                }
+            });
+
+        if (!wishlist) {
+            wishlist = await Wishlist.create({ user: req.user._id, items: [] });
+        }
+
+        res.json(wishlist);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
 const addToWishlist = async (req, res) => {
     try {
-        const { itemId, itemType } = req.body;
+        const { itemType, itemId } = req.body;
 
-        // Validate item exists
-        if (itemType === 'product') {
-            const product = await Product.findById(itemId);
-            if (!product) return res.status(404).json({ message: 'Product not found' });
-        } else if (itemType === 'portfolio') {
-            const portfolio = await Portfolio.findById(itemId);
-            if (!portfolio) return res.status(404).json({ message: 'Portfolio not found' });
-        } else if (itemType === 'seller') {
-            const seller = await User.findById(itemId);
-            if (!seller) return res.status(404).json({ message: 'Seller not found' });
-        } else {
+        if (!['portfolio', 'product', 'creator', 'training'].includes(itemType)) {
             return res.status(400).json({ message: 'Invalid item type' });
         }
 
-        // Check if already in wishlist
-        const user = await User.findById(req.user._id);
-        const exists = user.wishlist.some(item => 
+        let wishlist = await Wishlist.findOne({ user: req.user._id });
+
+        if (!wishlist) {
+            wishlist = await Wishlist.create({ user: req.user._id, items: [] });
+        }
+
+        const existingItem = wishlist.items.find(item =>
             item.itemId.toString() === itemId && item.itemType === itemType
         );
 
-        if (exists) {
+        if (existingItem) {
             return res.status(400).json({ message: 'Item already in wishlist' });
         }
 
-        user.wishlist.push({ itemId, itemType });
-        await user.save();
-
-        res.json({ 
-            message: 'Added to wishlist', 
-            wishlist: user.wishlist,
-            total: user.wishlist.length 
+        wishlist.items.push({
+            itemType,
+            itemId,
+            addedAt: new Date()
         });
+
+        await wishlist.save();
+
+        await AnalyticsEvent.create({
+            user: req.user._id,
+            eventType: 'wishlist_add',
+            targetId: itemId,
+            targetType: itemType,
+            metadata: { itemType, itemId }
+        });
+
+        res.json(wishlist);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
 
-// Remove from wishlist
 const removeFromWishlist = async (req, res) => {
     try {
-        const { itemId, itemType } = req.body;
+        const { itemType, itemId } = req.params;
 
-        const user = await User.findById(req.user._id);
-        const initialLength = user.wishlist.length;
-        
-        user.wishlist = user.wishlist.filter(item => 
+        const wishlist = await Wishlist.findOne({ user: req.user._id });
+
+        if (!wishlist) {
+            return res.status(404).json({ message: 'Wishlist not found' });
+        }
+
+        const initialLength = wishlist.items.length;
+        wishlist.items = wishlist.items.filter(item =>
             !(item.itemId.toString() === itemId && item.itemType === itemType)
         );
 
-        await user.save();
-        
-        res.json({ 
-            message: 'Removed from wishlist', 
-            wishlist: user.wishlist,
-            removed: initialLength - user.wishlist.length
-        });
-    } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
-    }
-};
-
-// Get my wishlist with populated items
-const getMyWishlist = async (req, res) => {
-    try {
-        const user = await User.findById(req.user._id)
-            .populate({
-                path: 'wishlist.itemId',
-                select: 'name title description price imageUrl category seller profileImage bio'
-            });
-
-        // Organize by type
-        const wishlistByType = {
-            products: [],
-            portfolios: [],
-            sellers: []
-        };
-
-        for (const item of user.wishlist) {
-            if (item.itemId) {
-                const wishlistItem = {
-                    _id: item._id,
-                    itemId: item.itemId._id,
-                    itemType: item.itemType,
-                    addedAt: item.addedAt,
-                    item: item.itemId
-                };
-
-                if (item.itemType === 'product') {
-                    wishlistByType.products.push(wishlistItem);
-                } else if (item.itemType === 'portfolio') {
-                    wishlistByType.portfolios.push(wishlistItem);
-                } else if (item.itemType === 'seller') {
-                    wishlistByType.sellers.push(wishlistItem);
-                }
-            }
+        if (wishlist.items.length === initialLength) {
+            return res.status(404).json({ message: 'Item not found in wishlist' });
         }
 
-        res.json(wishlistByType);
-    } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
-    }
-};
+        await wishlist.save();
 
-// Check if item is in wishlist
-const checkInWishlist = async (req, res) => {
-    try {
-        const { itemId, itemType } = req.params;
-
-        const user = await User.findById(req.user._id);
-        const inWishlist = user.wishlist.some(item => 
-            item.itemId.toString() === itemId && item.itemType === itemType
-        );
-
-        res.json({ inWishlist });
-    } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
-    }
-};
-
-// Clear entire wishlist
-const clearWishlist = async (req, res) => {
-    try {
-        const user = await User.findById(req.user._id);
-        const count = user.wishlist.length;
-        
-        user.wishlist = [];
-        await user.save();
-
-        res.json({ 
-            message: 'Wishlist cleared', 
-            itemsRemoved: count 
+        await AnalyticsEvent.create({
+            user: req.user._id,
+            eventType: 'wishlist_remove',
+            targetId: itemId,
+            targetType: itemType,
+            metadata: { itemType, itemId }
         });
+
+        res.json(wishlist);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+const createWishlistCategory = async (req, res) => {
+    try {
+        const { categoryName } = req.body;
+
+        const wishlist = await Wishlist.findOne({ user: req.user._id });
+
+        if (!wishlist) {
+            return res.status(404).json({ message: 'Wishlist not found' });
+        }
+
+        const existingCategory = wishlist.categories.find(cat => cat.name === categoryName);
+        if (existingCategory) {
+            return res.status(400).json({ message: 'Category already exists' });
+        }
+
+        wishlist.categories.push({
+            name: categoryName,
+            itemIds: []
+        });
+
+        await wishlist.save();
+
+        res.json(wishlist);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+const addItemToCategory = async (req, res) => {
+    try {
+        const { categoryName, itemId } = req.body;
+
+        const wishlist = await Wishlist.findOne({ user: req.user._id });
+
+        if (!wishlist) {
+            return res.status(404).json({ message: 'Wishlist not found' });
+        }
+
+        const category = wishlist.categories.find(cat => cat.name === categoryName);
+        if (!category) {
+            return res.status(404).json({ message: 'Category not found' });
+        }
+
+        if (!category.itemIds.includes(itemId)) {
+            category.itemIds.push(itemId);
+            await wishlist.save();
+        }
+
+        res.json(wishlist);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
 
 module.exports = {
+    getMyWishlist,
     addToWishlist,
     removeFromWishlist,
-    getMyWishlist,
-    checkInWishlist,
-    clearWishlist
+    createWishlistCategory,
+    addItemToCategory
 };
