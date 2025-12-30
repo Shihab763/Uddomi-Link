@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const SearchIndex = require('./searchIndexModel');
 
 const portfolioSchema = mongoose.Schema({
     title: {
@@ -66,5 +67,59 @@ const portfolioSchema = mongoose.Schema({
 });
 
 portfolioSchema.index({ title: 'text', description: 'text', tags: 'text', skills: 'text' });
+
+portfolioSchema.post('save', async function(doc) {
+    await updatePortfolioSearchIndex(doc);
+});
+
+portfolioSchema.post('findOneAndUpdate', async function(doc) {
+    if (doc) {
+        await updatePortfolioSearchIndex(doc);
+    }
+});
+
+portfolioSchema.post('findOneAndDelete', async function(doc) {
+    if (doc) {
+        await SearchIndex.deleteOne({
+            itemType: 'portfolio',
+            itemId: doc._id
+        });
+    }
+});
+
+async function updatePortfolioSearchIndex(doc) {
+    const User = require('./userModel');
+    const creator = await User.findById(doc.creator);
+    
+    const searchData = {
+        title: doc.title,
+        description: doc.description,
+        category: doc.category,
+        tags: doc.tags,
+        skills: doc.skills,
+        price: doc.priceRange?.min || 0,
+        location: creator?.location || {},
+        creator: doc.creator,
+        acceptsCustomOrders: doc.acceptsCustomOrders,
+        isActive: doc.isActive,
+        lastUpdated: new Date()
+    };
+
+    if (creator?.location?.coordinates) {
+        searchData.location = {
+            ...searchData.location,
+            coordinates: creator.location.coordinates
+        };
+    }
+
+    await SearchIndex.findOneAndUpdate(
+        {
+            itemType: 'portfolio',
+            itemId: doc._id
+        },
+        searchData,
+        { upsert: true, new: true }
+    );
+}
 
 module.exports = mongoose.model('Portfolio', portfolioSchema);
