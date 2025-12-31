@@ -54,8 +54,8 @@ function Navbar() {
           <span>🌾</span> Uddomi Link
         </Link>
 
-        {/* Search Bar - Mobile & Desktop */}
-        <form onSubmit={handleSearch} className="w-full md:w-auto md:flex-1 max-w-lg">
+        {/* Search Bar - Fixed positioning with ml-8 */}
+        <form onSubmit={handleSearch} className="w-full md:w-auto md:flex-grow md:max-w-xl md:ml-8">
           <div className="relative">
             <input
               type="text"
@@ -73,7 +73,7 @@ function Navbar() {
           </div>
         </form>
 
-        {/* Navigation Links */}
+        {/* Navigation Links - Fixed order: Marketplace, Sellers, My Products, Cart, Orders, User, Logout */}
         <div className="flex items-center flex-wrap justify-center gap-3 md:gap-4">
           <Link to="/marketplace" className="text-white hover:text-secondary transition font-medium text-sm md:text-base">
             🛍️ Marketplace
@@ -81,23 +81,6 @@ function Navbar() {
           
           <Link to="/sellers" className="text-white hover:text-secondary transition font-medium text-sm md:text-base">
             👥 Sellers
-          </Link>
-          
-          <Link to="/portfolio" className="text-white hover:text-secondary transition font-medium text-sm md:text-base">
-            🎨 Portfolio
-          </Link>
-          
-          <Link to="/custom-orders" className="text-white hover:text-secondary transition font-medium text-sm md:text-base">
-            ✨ Custom
-          </Link>
-          
-          <Link to="/wishlist" className="text-white hover:text-secondary transition font-medium text-sm md:text-base relative">
-            ❤️ Wishlist
-            {wishlistCount > 0 && (
-              <span className="absolute -top-2 -right-2 bg-accent text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                {wishlistCount}
-              </span>
-            )}
           </Link>
           
           {/* Advanced Search Link (Mobile visible) */}
