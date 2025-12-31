@@ -94,7 +94,26 @@ const getUserAnalytics = async (req, res) => {
             });
         }
 
+        const userProducts = await Product.find({ seller: req.user._id });
+        const productRevenue = userProducts.reduce((sum, product) => sum + (product.price || 0), 0);
+
+        const userBookings = await Booking.find({ seller: req.user._id, status: 'completed' });
+        const bookingRevenue = userBookings.reduce((sum, booking) => sum + (booking.price || 0), 0);
+
+        const userCustomOrders = await CustomOrder.find({ creator: req.user._id, status: 'completed' });
+        const customOrderRevenue = userCustomOrders.reduce((sum, order) => sum + (order.finalPrice || 0), 0);
+
+        userAnalytics.totalRevenue = productRevenue + bookingRevenue + customOrderRevenue;
+        userAnalytics.totalOrders = userProducts.length;
+        userAnalytics.totalBookings = userBookings.length;
+        userAnalytics.totalCustomOrders = userCustomOrders.length;
         userAnalytics.topPortfolioItems = topPortfolioItems;
+        
+        monthlyStat.views = weeklyData.reduce((sum, day) => sum + day.views, 0);
+        monthlyStat.revenue = userAnalytics.totalRevenue;
+        monthlyStat.orders = userAnalytics.totalOrders;
+        monthlyStat.bookings = userAnalytics.totalBookings;
+
         await userAnalytics.save();
 
         const analyticsData = {
@@ -122,6 +141,7 @@ const getUserAnalytics = async (req, res) => {
 
         res.json(analyticsData);
     } catch (error) {
+        console.error('Analytics error:', error);
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
@@ -207,7 +227,7 @@ const getSearchAnalytics = async (req, res) => {
         const searchCategories = {};
 
         searchEvents.forEach(event => {
-            const searchTerm = event.metadata?.searchTerm || 'unknown';
+            const searchTerm = event.metadata?.query || 'unknown';
             const category = event.metadata?.category || 'general';
 
             popularSearches[searchTerm] = (popularSearches[searchTerm] || 0) + 1;
@@ -225,7 +245,7 @@ const getSearchAnalytics = async (req, res) => {
             searchCategories,
             searchFrequency: searchEvents.length / 30,
             lastSearches: searchEvents.slice(0, 5).map(event => ({
-                term: event.metadata?.searchTerm,
+                term: event.metadata?.query,
                 category: event.metadata?.category,
                 date: event.createdAt
             }))
