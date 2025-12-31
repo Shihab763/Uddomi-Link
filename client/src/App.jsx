@@ -21,6 +21,8 @@ import CustomOrdersPage from './pages/CustomOrdersPage';
 import WishlistPage from './pages/WishlistPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import CustomOrderRequests from './pages/CustomOrderRequests';
+import CreateCustomOrder from './pages/CreateCustomOrder';
+
 
 
 
@@ -48,6 +50,8 @@ function App() {
           <Route path="/analytics" element={<AnalyticsPage />} />
           <Route path="/custom-orders" element={<CustomOrdersPage />} />
           <Route path="/custom-order-requests" element={<CustomOrderRequests />} />
+          <Route path="/custom-orders" element={<CreateCustomOrder />} />
+
           <Route path="/wishlist" element={<WishlistPage />} />
           <Route
             path="/admin"
