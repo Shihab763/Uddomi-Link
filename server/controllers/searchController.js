@@ -27,7 +27,7 @@ const searchItems = async (req, res) => {
             limit = 20
         } = req.query;
 
-        let filter = { isActive: true };
+        let filter = { isActive: true, isApproved: true };
         
         if (itemType && itemType !== 'all') {
             filter.itemType = itemType;
@@ -91,7 +91,13 @@ const searchItems = async (req, res) => {
                     $text: { $search: q }
                 }
             });
-            
+        }
+        
+        searchPipeline.push({
+            $match: filter
+        });
+        
+        if (q && q.trim()) {
             searchPipeline.push({
                 $addFields: {
                     score: { $meta: "textScore" }
@@ -99,19 +105,9 @@ const searchItems = async (req, res) => {
             });
         } else {
             searchPipeline.push({
-                $match: filter
-            });
-            
-            searchPipeline.push({
                 $addFields: {
                     score: 1
                 }
-            });
-        }
-
-        if (q && q.trim()) {
-            searchPipeline.push({
-                $match: filter
             });
         }
 
@@ -152,7 +148,7 @@ const searchItems = async (req, res) => {
         const countResult = await SearchIndex.aggregate(countPipeline);
         const total = countResult[0]?.total || 0;
 
-        const populatedResults = await populateSearchResults(searchResults);
+        const populatedResults = await populateSearchResults(searchResults, req.user);
 
         if (req.user) {
             await AnalyticsEvent.create({
@@ -222,7 +218,8 @@ const getSearchSuggestions = async (req, res) => {
             {
                 $match: {
                     $text: { $search: q },
-                    isActive: true
+                    isActive: true,
+                    isApproved: true
                 }
             },
             {
@@ -276,7 +273,7 @@ const getSearchFilters = async (req, res) => {
     try {
         const { itemType = 'all' } = req.query;
         
-        const filter = itemType !== 'all' ? { itemType, isActive: true } : { isActive: true };
+        const filter = itemType !== 'all' ? { itemType, isActive: true, isApproved: true } : { isActive: true, isApproved: true };
 
         const [
             categories,
@@ -405,7 +402,7 @@ const getPopularSearches = async (req, res) => {
     }
 };
 
-async function populateSearchResults(searchResults) {
+async function populateSearchResults(searchResults, currentUser) {
     const populatedResults = [];
     
     for (const result of searchResults) {
@@ -416,6 +413,15 @@ async function populateSearchResults(searchResults) {
                 populatedItem = await Product.findById(result.itemId)
                     .select('name description price category imageUrl stock seller rating isApproved')
                     .populate('seller', 'name profileImage location');
+                
+                if (populatedItem) {
+                    const item = populatedItem.toObject();
+                    item.isOwner = currentUser && currentUser._id === item.seller._id.toString();
+                    populatedResults.push({
+                        ...result,
+                        item: item
+                    });
+                }
                 break;
                 
             case 'portfolio':
@@ -431,7 +437,7 @@ async function populateSearchResults(searchResults) {
                 break;
         }
         
-        if (populatedItem) {
+        if (populatedItem && !populatedItem.isOwner) {
             populatedResults.push({
                 ...result,
                 item: populatedItem.toObject ? populatedItem.toObject() : populatedItem
