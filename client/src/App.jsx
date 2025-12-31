@@ -55,29 +55,29 @@ function App() {
           <Route path="/my-bookings" element={<MyBookings />} />
           <Route path="/booking-requests" element={<BookingRequests />} />
           <Route
-              path="/skill-hub"
-              element={
-                <ProtectedRoute requiredRole="business-owner">
+            path="/skill-hub"
+            element={
+              <ProtectedRoute requiredRole="business-owner">
                 <SkillHub />
-                </ProtectedRoute>
-              }
+              </ProtectedRoute>
+            }
           />
 
           <Route
-              path="/ngo/trainings"
-              element={
-                <ProtectedRoute requiredRole="ngo">
+            path="/ngo/trainings"
+            element={
+              <ProtectedRoute requiredRole="ngo">
                 <NgoTrainings />
-                </ProtectedRoute>
-              }
+              </ProtectedRoute>
+            }
           />
 
-          
+
           <Route
             path="/creators"
             element={
               <ProtectedRoute requiredRole="ngo">
-              <Creators />
+                <Creators />
               </ProtectedRoute>
             }
           />
@@ -86,7 +86,7 @@ function App() {
             path="/mentees"
             element={
               <ProtectedRoute requiredRole="ngo">
-              <Mentees />
+                <Mentees />
               </ProtectedRoute>
             }
           />
@@ -95,7 +95,7 @@ function App() {
             path="/mentorship-offers"
             element={
               <ProtectedRoute requiredRole="business-owner">
-              <MentorshipOffers />
+                <MentorshipOffers />
               </ProtectedRoute>
             }
           />
@@ -104,20 +104,18 @@ function App() {
             path="/mentors"
             element={
               <ProtectedRoute requiredRole="business-owner">
-              <Mentors />
+                <Mentors />
               </ProtectedRoute>
             }
           />
 
-          <Route path="/custom-orders" element={<CustomOrders />} />
-          <Route path="/wishlist" element={<Wishlist />} />
-          <Route path="/search" element={<AdvancedSearchPage />} />
-          <Route path="/analytics" element={<AnalyticsPage />} />
+
           <Route path="/custom-orders" element={<CustomOrdersPage />} />
           <Route path="/custom-order-requests" element={<CustomOrderRequests />} />
-          <Route path="/custom-orders" element={<CreateCustomOrder />} />
-
+          <Route path="/create-custom-order" element={<CreateCustomOrder />} />
           <Route path="/wishlist" element={<WishlistPage />} />
+          <Route path="/search" element={<AdvancedSearchPage />} />
+          <Route path="/analytics" element={<AnalyticsPage />} />
           <Route
             path="/admin"
             element={
