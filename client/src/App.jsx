@@ -20,6 +20,7 @@ import AdvancedSearchPage from './pages/AdvancedSearchPage';
 import CustomOrdersPage from './pages/CustomOrdersPage';
 import WishlistPage from './pages/WishlistPage';
 import AnalyticsPage from './pages/AnalyticsPage';
+import CustomOrderRequests from './pages/CustomOrderRequests';
 
 
 
@@ -46,6 +47,7 @@ function App() {
           <Route path="/search" element={<AdvancedSearchPage />} />
           <Route path="/analytics" element={<AnalyticsPage />} />
           <Route path="/custom-orders" element={<CustomOrdersPage />} />
+          <Route path="/custom-order-requests" element={<CustomOrderRequests />} />
           <Route path="/wishlist" element={<WishlistPage />} />
           <Route
             path="/admin"
