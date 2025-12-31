@@ -16,6 +16,14 @@ import SellersDirectory from './pages/SellersDirectory';
 import PortfolioPage from './pages/PortfolioPage';
 import MyBookings from './pages/MyBookings';
 import BookingRequests from './pages/BookingRequests';
+import SkillHub from './pages/SkillHub';
+import NgoTrainings from './pages/NgoTrainings';
+import Creators from './pages/Creators';
+import Mentees from './pages/Mentees';
+import Mentors from './pages/Mentors';
+import MentorshipOffers from './pages/MentorshipOffers';
+
+
 import AdvancedSearchPage from './pages/AdvancedSearchPage';
 import CustomOrdersPage from './pages/CustomOrdersPage';
 import WishlistPage from './pages/WishlistPage';
@@ -46,6 +54,63 @@ function App() {
           <Route path="/portfolio" element={<PortfolioPage />} />
           <Route path="/my-bookings" element={<MyBookings />} />
           <Route path="/booking-requests" element={<BookingRequests />} />
+          <Route
+              path="/skill-hub"
+              element={
+                <ProtectedRoute requiredRole="business-owner">
+                <SkillHub />
+                </ProtectedRoute>
+              }
+          />
+
+          <Route
+              path="/ngo/trainings"
+              element={
+                <ProtectedRoute requiredRole="ngo">
+                <NgoTrainings />
+                </ProtectedRoute>
+              }
+          />
+
+          
+          <Route
+            path="/creators"
+            element={
+              <ProtectedRoute requiredRole="ngo">
+              <Creators />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/mentees"
+            element={
+              <ProtectedRoute requiredRole="ngo">
+              <Mentees />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/mentorship-offers"
+            element={
+              <ProtectedRoute requiredRole="business-owner">
+              <MentorshipOffers />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/mentors"
+            element={
+              <ProtectedRoute requiredRole="business-owner">
+              <Mentors />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route path="/custom-orders" element={<CustomOrders />} />
+          <Route path="/wishlist" element={<Wishlist />} />
           <Route path="/search" element={<AdvancedSearchPage />} />
           <Route path="/analytics" element={<AnalyticsPage />} />
           <Route path="/custom-orders" element={<CustomOrdersPage />} />

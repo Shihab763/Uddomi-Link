@@ -3,6 +3,8 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import RoleRequestModal from '../components/RoleRequestModal';
 import ReportSellerModal from "../components/ReportSellerModal";
 import BookSellerModal from "../components/BookSellerModal";
+import OfferMentorshipModal from "../components/OfferMentorshipModal";
+
 
 function UserProfile() {
     const { userId } = useParams();
@@ -19,6 +21,10 @@ function UserProfile() {
     const [bookingSubmitting, setBookingSubmitting] = useState(false);
     const [bookingError, setBookingError] = useState("");
     const [bookingSuccess, setBookingSuccess] = useState("");
+    const [showMentorshipModal, setShowMentorshipModal] = useState(false);
+    const [mentorshipSubmitting, setMentorshipSubmitting] = useState(false);
+    const [mentorshipError, setMentorshipError] = useState("");
+    const [mentorshipSuccess, setMentorshipSuccess] = useState("");
 
 
 
@@ -28,7 +34,8 @@ function UserProfile() {
         !currentUser?.roles?.includes('ngo');
 
     const currentUserId = currentUser?._id;
-        
+    const isNgoUser = currentUser?.roles?.includes("ngo");
+    
 
     useEffect(() => {
         fetchProfile();
@@ -93,8 +100,7 @@ function UserProfile() {
         setReportSuccess("");
 
         try {
-    // We’ll wire backend later, but this is already clean and ready.
-    // This will NOT break the UI if backend isn’t ready yet — it will show an error message.
+
 
             const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
             const token = currentUser?.token || currentUser?.accessToken || "";
@@ -199,6 +205,41 @@ function UserProfile() {
     }
 };
 
+  const handleMentorshipSubmit = async ({ message }) => {
+    setMentorshipSubmitting(true);
+    setMentorshipError("");
+    setMentorshipSuccess("");
+
+    try {
+      const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
+      const token = currentUser?.token || currentUser?.accessToken || "";
+
+      const res = await fetch(`${API_BASE}/api/mentorship/offers`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          businessOwnerId: viewedUserId,
+          message: message || "",
+        }),
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || "Failed to send mentorship offer");
+      }
+
+      setMentorshipSuccess("Mentorship offer sent.");
+      setShowMentorshipModal(false);
+    } catch (err) {
+      setMentorshipError(err.message || "Could not send mentorship offer.");
+    } finally {
+      setMentorshipSubmitting(false);
+    }
+  };
+
 
     
 
@@ -266,6 +307,16 @@ function UserProfile() {
                                                 📩 Booking Requests
                                             </Link>
                                         )}
+                                        
+                                        {currentUser?.roles?.includes("ngo") && (
+                                            <Link
+                                                to="/ngo/trainings"
+                                                className="inline-block bg-primary text-white px-6 py-2 rounded hover:opacity-90 transition font-bold"
+                                            >
+                                                🎓 Trainings
+                                            </Link>
+                                        )}
+
 
                                         {isRegularUser && (
                                             <button
@@ -477,6 +528,28 @@ function UserProfile() {
                             </div>    
                         )}
 
+                        {/* Offer Mentorship (NGO -> Business Owner) */}
+                        {isLoggedIn && isNgoUser && isSellerProfile && !isOwnProfile && (
+                            <div className="bg-white rounded-lg shadow-lg p-6 mt-6">
+                                <h2 className="text-lg font-bold mb-3 text-dark">Offer Mentorship</h2>
+                                <p className="text-sm text-gray-600 mb-4">
+                                         You can offer mentorship to help this business owner grow with action plans and training recommendations.
+                                </p>
+                                <button
+                                    onClick={() => {
+                                        setMentorshipError("");
+                                        setMentorshipSuccess("");
+                                        setShowMentorshipModal(true);
+                                    }}
+                                    className="w-full rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
+                                    disabled={mentorshipSubmitting}
+                                >
+                                    🤝 Offer Mentorship
+                                </button>
+                            </div>
+                        )}
+
+
                     </div>
                 </div>
             </div>
@@ -505,6 +578,19 @@ function UserProfile() {
             )}
 
 
+            {mentorshipError && (
+                <div className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-700">
+                    {mentorshipError}
+                </div>
+            )}
+
+            {mentorshipSuccess && (
+                <div className="mt-4 rounded-md bg-green-50 p-3 text-sm text-green-700">
+                    {mentorshipSuccess}
+                </div>
+            )}
+
+
             <ReportSellerModal
                 isOpen={showReportModal}
                 onClose={() => setShowReportModal(false)}
@@ -517,6 +603,14 @@ function UserProfile() {
                 onClose={() => setShowBookingModal(false)}
                 onSubmit={handleBookingSubmit}
                 sellerName={viewedUser?.name || viewedUser?.fullName || viewedUser?.email}
+            />
+
+
+            <OfferMentorshipModal
+                isOpen={showMentorshipModal}
+                onClose={() => setShowMentorshipModal(false)}
+                onSubmit={handleMentorshipSubmit}
+                businessOwnerName={viewedUser?.name || viewedUser?.fullName || viewedUser?.email}
             />
 
 
