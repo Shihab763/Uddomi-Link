@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const SearchIndex = require('./searchIndexModel');
 
 const productSchema = mongoose.Schema({
     name: {
@@ -49,5 +50,62 @@ const productSchema = mongoose.Schema({
 }, {
     timestamps: true
 });
+
+productSchema.post('save', async function(doc) {
+    await updateProductSearchIndex(doc);
+});
+
+productSchema.post('findOneAndUpdate', async function(doc) {
+    if (doc) {
+        await updateProductSearchIndex(doc);
+    }
+});
+
+productSchema.post('findOneAndDelete', async function(doc) {
+    if (doc) {
+        await SearchIndex.deleteOne({
+            itemType: 'product',
+            itemId: doc._id
+        });
+    }
+});
+
+async function updateProductSearchIndex(doc) {
+    const User = require('./userModel');
+    const seller = await User.findById(doc.seller);
+    
+    const availability = doc.stock > 10 ? 'available' : 
+                        doc.stock > 0 ? 'limited' : 'unavailable';
+
+    const searchData = {
+        title: doc.name,
+        description: doc.description,
+        category: doc.category,
+        price: doc.price,
+        location: seller?.location || {},
+        creator: doc.seller,
+        rating: doc.rating,
+        availability: availability,
+        isActive: doc.isActive,
+        isApproved: doc.isApproved,
+        lastUpdated: new Date()
+    };
+
+    if (seller?.location?.coordinates) {
+        searchData.location = {
+            ...searchData.location,
+            coordinates: seller.location.coordinates
+        };
+    }
+
+    await SearchIndex.findOneAndUpdate(
+        {
+            itemType: 'product',
+            itemId: doc._id
+        },
+        searchData,
+        { upsert: true, new: true }
+    );
+}
 
 module.exports = mongoose.model('Product', productSchema);

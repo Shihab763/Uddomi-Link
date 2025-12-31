@@ -38,26 +38,6 @@ function Dashboard() {
       </div>
 
       <div className="container mx-auto px-4 py-10 -mt-10 relative z-10">
-
-        {hasRole('business-owner') && (
-          <div className="grid md:grid-cols-2 gap-6 mb-6">
-            <div className="bg-white p-6 rounded-lg shadow-lg border-t-4 border-primary">
-              <h2 className="text-2xl font-bold text-dark mb-4">My Products</h2>
-              <p className="text-gray-600 mb-6">Manage your product listings and inventory.</p>
-              <Link
-                to="/my-products"
-                className="block bg-primary text-white text-center px-6 py-2 rounded hover:bg-green-800 transition w-full font-bold"
-              >
-                Manage Products
-              </Link>
-            </div>
-            <div className="bg-white p-6 rounded-lg shadow-lg border-t-4 border-secondary">
-              <h2 className="text-2xl font-bold text-dark mb-4">Sales & Orders</h2>
-              <p className="text-gray-600">Track orders for your products.</p>
-            </div>
-          </div>
-        )}
-
         {hasRole('admin') && (
           <div className="bg-gradient-to-r from-red-500 to-red-700 text-white p-8 rounded-lg shadow-xl text-center max-w-2xl mx-auto mb-6">
             <h2 className="text-3xl font-bold mb-4">🔐 Administrator Access</h2>
@@ -73,7 +53,8 @@ function Dashboard() {
           </div>
         )}
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
+        {/* Main Dashboard Grid - All features remain here */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-8">
           <Link
             to="/marketplace"
             className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition text-center border-t-4 border-primary"
@@ -105,9 +86,9 @@ function Dashboard() {
             to="/my-bookings"
             className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition text-center border-t-4 border-blue-600"
           >
-          <div className="text-4xl mb-3">📅</div>
-          <h3 className="text-lg font-bold text-dark">My Bookings</h3>
-          <p className="text-sm text-gray-600 mt-2">View booking requests</p>
+            <div className="text-4xl mb-3">📅</div>
+            <h3 className="text-lg font-bold text-dark">My Bookings</h3>
+            <p className="text-sm text-gray-600 mt-2">View booking requests</p>
           </Link>
 
           
@@ -187,6 +168,65 @@ function Dashboard() {
             </Link>
           )}
 
+          {(hasRole('business-owner') || hasRole('artist')) && (
+            <Link
+              to="/analytics"
+              className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition text-center border-t-4 border-indigo-600"
+            >
+              <div className="text-4xl mb-3">📊</div>
+              <h3 className="text-lg font-bold text-dark">Analytics</h3>
+              <p className="text-sm text-gray-600 mt-2">Track performance</p>
+            </Link>
+          )}
+
+          {(hasRole('business-owner') || hasRole('artist')) && (
+            <Link
+              to="/my-products"
+              className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition text-center border-t-4 border-green-600"
+            >
+              <div className="text-4xl mb-3">📦</div>
+              <h3 className="text-lg font-bold text-dark">My Products</h3>
+              <p className="text-sm text-gray-600 mt-2">Manage listings</p>
+            </Link>
+          )}
+
+          {(hasRole('business-owner') || hasRole('artist')) && (
+            <Link
+              to="/portfolio"
+              className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition text-center border-t-4 border-purple-600"
+            >
+              <div className="text-4xl mb-3">🎨</div>
+              <h3 className="text-lg font-bold text-dark">Portfolio</h3>
+              <p className="text-sm text-gray-600 mt-2">Showcase your work</p>
+            </Link>
+          )}
+
+          <Link
+            to="/custom-orders"
+            className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition text-center border-t-4 border-blue-600"
+          >
+            <div className="text-4xl mb-3">✨</div>
+            <h3 className="text-lg font-bold text-dark">Custom Orders</h3>
+            <p className="text-sm text-gray-600 mt-2">Request unique work</p>
+          </Link>
+
+          <Link
+            to="/wishlist"
+            className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition text-center border-t-4 border-pink-600"
+          >
+            <div className="text-4xl mb-3">❤️</div>
+            <h3 className="text-lg font-bold text-dark">Wishlist</h3>
+            <p className="text-sm text-gray-600 mt-2">Save favorites</p>
+          </Link>
+
+          <Link
+            to="/search"
+            className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition text-center border-t-4 border-teal-600"
+          >
+            <div className="text-4xl mb-3">🔍</div>
+            <h3 className="text-lg font-bold text-dark">Advanced Search</h3>
+            <p className="text-sm text-gray-600 mt-2">Find exactly what you need</p>
+          </Link>
         </div>
       </div>
     </div>

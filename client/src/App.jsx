@@ -13,7 +13,7 @@ import OrderHistory from './pages/OrderHistory';
 import UserProfile from './pages/UserProfile';
 import EditProfile from './pages/EditProfile';
 import SellersDirectory from './pages/SellersDirectory';
-import Portfolio from './pages/Portfolio';
+import PortfolioPage from './pages/PortfolioPage';
 import MyBookings from './pages/MyBookings';
 import BookingRequests from './pages/BookingRequests';
 import SkillHub from './pages/SkillHub';
@@ -24,9 +24,13 @@ import Mentors from './pages/Mentors';
 import MentorshipOffers from './pages/MentorshipOffers';
 
 
+import AdvancedSearchPage from './pages/AdvancedSearchPage';
+import CustomOrdersPage from './pages/CustomOrdersPage';
+import WishlistPage from './pages/WishlistPage';
+import AnalyticsPage from './pages/AnalyticsPage';
+import CustomOrderRequests from './pages/CustomOrderRequests';
+import CreateCustomOrder from './pages/CreateCustomOrder';
 
-import CustomOrders from './pages/CustomOrders';
-import Wishlist from './pages/Wishlist';
 
 
 
@@ -47,7 +51,7 @@ function App() {
           <Route path="/sellers" element={<SellersDirectory />} />
           <Route path="/profile/:userId" element={<UserProfile />} />
           <Route path="/profile/edit" element={<EditProfile />} />
-          <Route path="/portfolio" element={<Portfolio />} />
+          <Route path="/portfolio" element={<PortfolioPage />} />
           <Route path="/my-bookings" element={<MyBookings />} />
           <Route path="/booking-requests" element={<BookingRequests />} />
           <Route
@@ -107,6 +111,13 @@ function App() {
 
           <Route path="/custom-orders" element={<CustomOrders />} />
           <Route path="/wishlist" element={<Wishlist />} />
+          <Route path="/search" element={<AdvancedSearchPage />} />
+          <Route path="/analytics" element={<AnalyticsPage />} />
+          <Route path="/custom-orders" element={<CustomOrdersPage />} />
+          <Route path="/custom-order-requests" element={<CustomOrderRequests />} />
+          <Route path="/custom-orders" element={<CreateCustomOrder />} />
+
+          <Route path="/wishlist" element={<WishlistPage />} />
           <Route
             path="/admin"
             element={
