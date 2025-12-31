@@ -6,7 +6,7 @@ const createPortfolio = async (req, res) => {
     title: req.body.title,
     description: req.body.description,
     category: req.body.category,
-    tags: req.body.tags?.split(',') || [],
+    tags: req.body.tags ? req.body.tags.split(',') : [],
     acceptsCustomOrders: req.body.acceptsCustomOrders,
     mediaUrl: `/uploads/${req.file.filename}`,
   });
@@ -14,9 +14,28 @@ const createPortfolio = async (req, res) => {
   res.status(201).json(portfolio);
 };
 
-const getMyPortfolio = async (req, res) => {
-  const items = await Portfolio.find({ creator: req.user._id });
+const getMyPortfolios = async (req, res) => {
+  const items = await Portfolio.find({ creator: req.user._id }).sort({
+    createdAt: -1,
+  });
   res.json(items);
 };
 
-module.exports = { createPortfolio, getMyPortfolio };
+const getPortfolioById = async (req, res) => {
+  const item = await Portfolio.findById(req.params.id).populate(
+    'creator',
+    'name email profileImage'
+  );
+
+  if (!item) {
+    return res.status(404).json({ message: 'Portfolio not found' });
+  }
+
+  res.json(item);
+};
+
+module.exports = {
+  createPortfolio,
+  getMyPortfolios,
+  getPortfolioById,
+};
