@@ -353,67 +353,56 @@ function AdvancedSearchPage() {
                 );
 
             case 'user':
-                return (
-                    <div key={`${itemType}-${item._id}`} className="bg-white border rounded-lg overflow-hidden shadow hover:shadow-lg transition">
-                        <div className="p-6">
-                            <div className="flex items-center mb-4">
-                                <img
-                                    src={item.profileImage || 'https://via.placeholder.com/64'}
-                                    alt={item.name}
-                                    className="w-16 h-16 rounded-full mr-4"
-                                />
-                                <div>
-                                    <h3 className="font-bold text-lg">{item.name}</h3>
-                                    <p className="text-gray-600 text-sm">{item.businessInfo?.type || 'Creator'}</p>
-                                    {item.isVerified && (
-                                        <span className="inline-block bg-green-100 text-green-800 px-2 py-1 rounded text-xs mt-1">
-                                            ✅ Verified
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
-                            
-                            <p className="text-gray-600 text-sm mb-4 line-clamp-2">{item.bio}</p>
-                            
-                            <div className="flex flex-wrap gap-2 mb-4">
-                                {item.serviceTypes?.slice(0, 3).map(skill => (
-                                    <span key={skill} className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
-                                        {skill}
-                                    </span>
-                                ))}
-                            </div>
-                            
-                            <div className="flex justify-between items-center">
-                                <div>
-                                    {item.location?.city && (
-                                        <span className="text-sm text-gray-600">📍 {item.location.city}</span>
-                                    )}
-                                </div>
-                                <div className="flex gap-2">
-                                    {item.acceptsCustomOrders && (
-                                        <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">
-                                            Custom Orders
-                                        </span>
-                                    )}
-                                    {item.acceptsBookings && (
-                                        <span className="bg-teal-100 text-teal-800 px-2 py-1 rounded text-xs">
-                                            Bookings
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
-                            
-                            <div className="mt-4">
-                                <Link
-                                    to={`/profile/${item._id}`}
-                                    className="block w-full bg-primary text-white text-center py-2 rounded hover:bg-green-800 transition"
-                                >
-                                    View Profile
-                                </Link>
-                            </div>
-                        </div>
-                    </div>
-                );
+  return (
+    <div
+      key={`${itemType}-${item._id}`}
+      className="bg-white border rounded-lg overflow-hidden shadow hover:shadow-lg transition"
+    >
+      <div className="p-6">
+        <div className="flex items-center mb-4">
+          <img
+            src={item.profileImage || 'https://via.placeholder.com/64'}
+            alt={item.name}
+            className="w-16 h-16 rounded-full mr-4"
+          />
+          <div>
+            <h3 className="font-bold text-lg">{item.name}</h3>
+            <p className="text-gray-600 text-sm">
+              {item.businessInfo?.type || 'Creator'}
+            </p>
+            {item.isVerified && (
+              <span className="inline-block bg-green-100 text-green-800 px-2 py-1 rounded text-xs mt-1">
+                ✅ Verified
+              </span>
+            )}
+          </div>
+        </div>
+
+        <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+          {item.bio}
+        </p>
+
+        <div className="flex justify-between items-center gap-2">
+          <Link
+            to={`/profile/${item._id}`}
+            className="flex-1 bg-primary text-white text-center py-2 rounded hover:bg-green-800 transition"
+          >
+            View Profile
+          </Link>
+
+          {item.acceptsCustomOrders && (
+            <Link
+              to={`/custom-orders?creatorId=${item._id}`}
+              className="flex-1 bg-blue-600 text-white text-center py-2 rounded hover:bg-blue-700 transition"
+            >
+              Request Custom
+            </Link>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
 
             default:
                 return null;
