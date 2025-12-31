@@ -38,54 +38,6 @@ function Dashboard() {
       </div>
 
       <div className="container mx-auto px-4 py-10 -mt-10 relative z-10">
-
-        {/* NEW: Analytics Dashboard Card (for business owners and artists) */}
-        {(hasRole('business-owner') || hasRole('artist')) && (
-          <div className="mb-6">
-            <div className="bg-gradient-to-r from-indigo-600 to-purple-700 text-white p-6 rounded-lg shadow-xl">
-              <div className="flex flex-col md:flex-row justify-between items-center">
-                <div>
-                  <h2 className="text-2xl font-bold mb-2">📊 Analytics Dashboard</h2>
-                  <p className="opacity-90">Track your performance, views, and revenue</p>
-                </div>
-                <Link
-                  to="/analytics"
-                  className="mt-4 md:mt-0 bg-white text-indigo-600 px-6 py-3 rounded-lg hover:bg-gray-100 transition font-bold"
-                >
-                  View Analytics →
-                </Link>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {hasRole('business-owner') && (
-          <div className="grid md:grid-cols-2 gap-6 mb-6">
-            <div className="bg-white p-6 rounded-lg shadow-lg border-t-4 border-primary">
-              <h2 className="text-2xl font-bold text-dark mb-4">My Products</h2>
-              <p className="text-gray-600 mb-6">Manage your product listings and inventory.</p>
-              <Link
-                to="/my-products"
-                className="block bg-primary text-white text-center px-6 py-2 rounded hover:bg-green-800 transition w-full font-bold"
-              >
-                Manage Products
-              </Link>
-            </div>
-            
-            {/* NEW: Portfolio Management Card */}
-            <div className="bg-white p-6 rounded-lg shadow-lg border-t-4 border-purple-600">
-              <h2 className="text-2xl font-bold text-dark mb-4">🎨 Portfolio Management</h2>
-              <p className="text-gray-600 mb-6">Showcase your work and attract custom orders.</p>
-              <Link
-                to="/portfolio"
-                className="block bg-purple-600 text-white text-center px-6 py-2 rounded hover:bg-purple-700 transition w-full font-bold"
-              >
-                Manage Portfolio
-              </Link>
-            </div>
-          </div>
-        )}
-
         {hasRole('admin') && (
           <div className="bg-gradient-to-r from-red-500 to-red-700 text-white p-8 rounded-lg shadow-xl text-center max-w-2xl mx-auto mb-6">
             <h2 className="text-3xl font-bold mb-4">🔐 Administrator Access</h2>
@@ -101,9 +53,8 @@ function Dashboard() {
           </div>
         )}
 
-        {/* Main Dashboard Grid - Updated with all 5 new features */}
+        {/* Main Dashboard Grid - All features remain here */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-8">
-          {/* Original Features */}
           <Link
             to="/marketplace"
             className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition text-center border-t-4 border-primary"
@@ -149,7 +100,6 @@ function Dashboard() {
             <p className="text-sm text-gray-600 mt-2">View & edit</p>
           </Link>
 
-          {/* NEW: Feature 1 - Analytics Dashboard */}
           {(hasRole('business-owner') || hasRole('artist')) && (
             <Link
               to="/analytics"
@@ -161,7 +111,17 @@ function Dashboard() {
             </Link>
           )}
 
-          {/* NEW: Feature 2 - Portfolio Management */}
+          {(hasRole('business-owner') || hasRole('artist')) && (
+            <Link
+              to="/my-products"
+              className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition text-center border-t-4 border-green-600"
+            >
+              <div className="text-4xl mb-3">📦</div>
+              <h3 className="text-lg font-bold text-dark">My Products</h3>
+              <p className="text-sm text-gray-600 mt-2">Manage listings</p>
+            </Link>
+          )}
+
           {(hasRole('business-owner') || hasRole('artist')) && (
             <Link
               to="/portfolio"
@@ -173,7 +133,6 @@ function Dashboard() {
             </Link>
           )}
 
-          {/* NEW: Feature 3 - Custom Order Requests */}
           <Link
             to="/custom-orders"
             className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition text-center border-t-4 border-blue-600"
@@ -183,7 +142,6 @@ function Dashboard() {
             <p className="text-sm text-gray-600 mt-2">Request unique work</p>
           </Link>
 
-          {/* NEW: Feature 4 - Wishlist & Favorites */}
           <Link
             to="/wishlist"
             className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition text-center border-t-4 border-pink-600"
@@ -193,7 +151,6 @@ function Dashboard() {
             <p className="text-sm text-gray-600 mt-2">Save favorites</p>
           </Link>
 
-          {/* NEW: Feature 5 - Advanced Search */}
           <Link
             to="/search"
             className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition text-center border-t-4 border-teal-600"
@@ -203,35 +160,6 @@ function Dashboard() {
             <p className="text-sm text-gray-600 mt-2">Find exactly what you need</p>
           </Link>
         </div>
-
-        {/* NEW: Quick Stats Section (for business owners) */}
-        {hasRole('business-owner') && (
-          <div className="mt-12">
-            <h2 className="text-2xl font-bold text-dark mb-6">Quick Overview</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-white p-4 rounded-lg shadow text-center">
-                <div className="text-2xl mb-2">📊</div>
-                <h4 className="font-bold">Analytics</h4>
-                <p className="text-sm text-gray-600">Track performance</p>
-              </div>
-              <div className="bg-white p-4 rounded-lg shadow text-center">
-                <div className="text-2xl mb-2">🎨</div>
-                <h4 className="font-bold">Portfolio</h4>
-                <p className="text-sm text-gray-600">Showcase work</p>
-              </div>
-              <div className="bg-white p-4 rounded-lg shadow text-center">
-                <div className="text-2xl mb-2">✨</div>
-                <h4 className="font-bold">Custom Orders</h4>
-                <p className="text-sm text-gray-600">Get requests</p>
-              </div>
-              <div className="bg-white p-4 rounded-lg shadow text-center">
-                <div className="text-2xl mb-2">🔍</div>
-                <h4 className="font-bold">Search</h4>
-                <p className="text-sm text-gray-600">Find customers</p>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
