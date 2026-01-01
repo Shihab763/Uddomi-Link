@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import NotificationBell from './NotificationBell'; 
 
 function Navbar() {
   const navigate = useNavigate();
@@ -29,7 +30,8 @@ function Navbar() {
         setWishlistCount(total);
       }
     } catch (error) {
-      console.error('Error fetching wishlist count:', error);
+    
+      console.log('Wishlist fetch skipped or failed'); 
     }
   };
 
@@ -47,14 +49,14 @@ function Navbar() {
   };
 
   return (
-    <nav className="bg-primary p-4 shadow-md">
+    <nav className="bg-primary p-4 shadow-md z-50 relative"> {/* Added z-50 for dropdowns */}
       <div className="container mx-auto flex flex-col md:flex-row justify-between items-center gap-4 md:gap-0">
-        {/* Logo */}
+     
         <Link to="/" className="text-white text-2xl font-bold tracking-wider flex items-center gap-2">
           <span>🌾</span> Uddomi Link
         </Link>
 
-        {/* Search Bar - Fixed positioning with ml-8 */}
+      
         <form onSubmit={handleSearch} className="w-full md:w-auto md:flex-grow md:max-w-xl md:ml-8">
           <div className="relative">
             <input
@@ -73,7 +75,7 @@ function Navbar() {
           </div>
         </form>
 
-        {/* Navigation Links - Fixed order: Marketplace, Sellers, My Products, Cart, Orders, User, Logout */}
+      
         <div className="flex items-center flex-wrap justify-center gap-3 md:gap-4">
           <Link to="/marketplace" className="text-white hover:text-secondary transition font-medium text-sm md:text-base">
             🛍️ Marketplace
@@ -83,7 +85,6 @@ function Navbar() {
             👥 Sellers
           </Link>
           
-          {/* Advanced Search Link (Mobile visible) */}
           <Link to="/search" className="md:hidden text-white hover:text-secondary transition font-medium text-sm">
             🔍 Advanced
           </Link>
@@ -102,6 +103,12 @@ function Navbar() {
               <Link to="/orders" className="text-white hover:text-secondary transition font-medium text-sm md:text-base">
                 📦 Orders
               </Link>
+
+              
+              <div className="text-white">
+                <NotificationBell />
+              </div>
+             
             </>
           )}
           
