@@ -21,8 +21,7 @@ const notificationSchema = mongoose.Schema({
     },
     type: {
         type: String,
-        // CRITICAL: Ensure 'booking_request' is in this list
-        enum: ['info', 'warning', 'success', 'error', 'booking_request', 'booking_update'], 
+        enum: ['info', 'warning', 'success', 'error', 'booking_request', 'booking_update', 'loan_update'], 
         default: 'info'
     },
     link: {
