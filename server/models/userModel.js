@@ -37,14 +37,21 @@ const userSchema = mongoose.Schema({
         default: ''
     },
     location: {
-        city: { type: String, default: '' },
-        district: { type: String, default: '' },
-        streetAddress: { type: String, default: '' },
-        coordinates: {
-            type: [Number],
-            index: '2dsphere'
-        }
-    },
+            city: { type: String, default: '' },
+            district: { type: String, default: '' },
+            streetAddress: { type: String, default: '' },
+
+            type: {
+                type: String, 
+                enum: ['Point'], 
+                default: 'Point'
+            },
+            coordinates: {
+                type: [Number], 
+                default: [0, 0]
+            }
+
+        },
     businessInfo: {
         name: { type: String, default: '' },
         type: { type: String, default: '' },
@@ -99,12 +106,13 @@ userSchema.post('findOneAndDelete', async function(doc) {
 });
 
 async function updateUserSearchIndex(doc) {
+  
     const searchData = {
         title: doc.name,
         description: doc.bio || '',
         category: doc.businessInfo?.type || 'creator',
         skills: doc.serviceTypes || [],
-        location: doc.location || {},
+        location: doc.location || {}, 
         creator: doc._id,
         rating: { average: 0, count: 0 },
         acceptsCustomOrders: doc.acceptsCustomOrders,
@@ -114,21 +122,29 @@ async function updateUserSearchIndex(doc) {
         lastUpdated: new Date()
     };
 
-    if (doc.location?.coordinates) {
+    
+    if (doc.location && doc.location.coordinates) {
         searchData.location = {
-            ...searchData.location,
+            ...searchData.location, 
+            type: 'Point',          
             coordinates: doc.location.coordinates
         };
     }
 
-    await SearchIndex.findOneAndUpdate(
-        {
-            itemType: 'user',
-            itemId: doc._id
-        },
-        searchData,
-        { upsert: true, new: true }
-    );
+  
+    try {
+        await SearchIndex.findOneAndUpdate(
+            {
+                itemType: 'user',
+                itemId: doc._id
+            },
+            searchData,
+            { upsert: true, new: true }
+        );
+    } catch (error) {
+        console.error("Search Index Update Warning:", error.message);
+      
+    }
 }
-
+userSchema.index({ location: '2dsphere' });
 module.exports = mongoose.model('User', userSchema);
