@@ -53,8 +53,9 @@ function Dashboard() {
           </div>
         )}
 
-        {/* Main Dashboard Grid - All features remain here */}
+        {/* Main Dashboard Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-8">
+          
           <Link
             to="/marketplace"
             className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition text-center border-t-4 border-primary"
@@ -91,17 +92,14 @@ function Dashboard() {
             <p className="text-sm text-gray-600 mt-2">View booking requests</p>
           </Link>
 
-          
           {user?.roles?.includes("ngo") && (
             <Link
               to="/creators"
               className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition text-center border-t-4 border-red-600"
             >
-            
-            <div className="text-4xl mb-3">👩‍🎨</div>
-            <h3 className="text-xl font-bold text-dark">Creators</h3>
-            <p className="text-sm text-gray-600 mt-2">Browse Creators</p>
-            
+              <div className="text-4xl mb-3">👩‍🎨</div>
+              <h3 className="text-xl font-bold text-dark">Creators</h3>
+              <p className="text-sm text-gray-600 mt-2">Browse Creators</p>
             </Link>
           )}
 
@@ -110,41 +108,33 @@ function Dashboard() {
               to="/mentees"
               className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition text-center border-t-4 border-green-600"
             >
-    
-            <div className="text-4xl mb-3">👥</div>
-            <h3 className="text-xl font-bold text-dark">Mentees</h3>
-            <p className="text-sm text-gray-600 mt-2">Mnanage Your Mentees</p>
-    
+              <div className="text-4xl mb-3">👥</div>
+              <h3 className="text-xl font-bold text-dark">Mentees</h3>
+              <p className="text-sm text-gray-600 mt-2">Manage Your Mentees</p>
             </Link>
           )}
-
           
           {user?.roles?.includes("business-owner") && (
             <Link
               to="/mentorship-offers"
               className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition text-center border-t-4 border-purple-600"
             >
-    
-            <div className="text-4xl mb-3">🤝</div>
-            <h3 className="text-xl font-bold text-dark">Mentorship Offers</h3>
-            <p className="text-sm text-gray-600 mt-2">Accept or reject offers</p>
-    
+              <div className="text-4xl mb-3">🤝</div>
+              <h3 className="text-xl font-bold text-dark">Mentorship Offers</h3>
+              <p className="text-sm text-gray-600 mt-2">Accept or reject offers</p>
             </Link>
           )}
 
           {user?.roles?.includes("business-owner") && (
             <Link
               to="/mentors"
-              className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition text-center border-t-4 border-red-600r"
+              className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition text-center border-t-4 border-red-600"
             >
-    
-            <div className="text-4xl mb-3">🧑‍🏫</div>
-            <h3 className="text-xl font-bold text-dark">Mentors</h3>
-            <p className="text-sm text-gray-600 mt-2">Plans & recommendations</p>
-    
+              <div className="text-4xl mb-3">🧑‍🏫</div>
+              <h3 className="text-xl font-bold text-dark">Mentors</h3>
+              <p className="text-sm text-gray-600 mt-2">Plans & recommendations</p>
             </Link>
           )}
-
 
           <Link
             to={`/profile/${user._id}`}
@@ -160,45 +150,65 @@ function Dashboard() {
               to="/skill-hub"
               className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition text-center border-t-4 border-yellow-600"
             >
+              <div className="text-4xl mb-3">📚</div>
+              <h3 className="text-xl font-bold text-dark">Skill Hub</h3>
+              <p className="text-gray-600 text-sm mt-2">Workshops & tutorials</p>
+            </Link>
+          )}
+
+       
+          {(hasRole('business-owner') || hasRole('artist')) && (
+            <>
+              {/* ANALYTICS */}
+              <Link
+                to="/analytics"
+                className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition text-center border-t-4 border-indigo-600"
+              >
+                <div className="text-4xl mb-3">📊</div>
+                <h3 className="text-lg font-bold text-dark">Analytics</h3>
+                <p className="text-sm text-gray-600 mt-2">Track performance</p>
+              </Link>
+
+              {/* MY PRODUCTS */}
+              <Link
+                to="/my-products"
+                className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition text-center border-t-4 border-green-600"
+              >
+                <div className="text-4xl mb-3">📦</div>
+                <h3 className="text-lg font-bold text-dark">My Products</h3>
+                <p className="text-sm text-gray-600 mt-2">Manage listings</p>
+              </Link>
+
     
-            <div className="text-4xl mb-3">📚</div>
-            <h3 className="text-xl font-bold text-dark">Skill Hub</h3>
-            <p className="text-gray-600 text-sm mt-2">Workshops & tutorials</p>
-    
-            </Link>
+              <Link
+                to="/portfolio"
+                className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition text-center border-t-4 border-purple-600"
+              >
+                <div className="text-4xl mb-3">🎨</div>
+                <h3 className="text-lg font-bold text-dark">Portfolio</h3>
+                <p className="text-sm text-gray-600 mt-2">Showcase your work</p>
+              </Link>
+              
+              <Link
+                to="/microfinance"
+                className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition text-center border-t-4 border-green-700"
+              >
+                <div className="text-4xl mb-3">🏦</div>
+                <h3 className="text-lg font-bold text-dark">Microfinance</h3>
+                <p className="text-sm text-gray-600 mt-2">Apply for Funding</p>
+              </Link>
+            </>
           )}
 
-          {(hasRole('business-owner') || hasRole('artist')) && (
-            <Link
-              to="/analytics"
-              className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition text-center border-t-4 border-indigo-600"
-            >
-              <div className="text-4xl mb-3">📊</div>
-              <h3 className="text-lg font-bold text-dark">Analytics</h3>
-              <p className="text-sm text-gray-600 mt-2">Track performance</p>
-            </Link>
-          )}
-
-          {(hasRole('business-owner') || hasRole('artist')) && (
-            <Link
-              to="/my-products"
-              className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition text-center border-t-4 border-green-600"
-            >
-              <div className="text-4xl mb-3">📦</div>
-              <h3 className="text-lg font-bold text-dark">My Products</h3>
-              <p className="text-sm text-gray-600 mt-2">Manage listings</p>
-            </Link>
-          )}
-
-          {(hasRole('business-owner') || hasRole('artist')) && (
-            <Link
-              to="/portfolio"
-              className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition text-center border-t-4 border-purple-600"
-            >
-              <div className="text-4xl mb-3">🎨</div>
-              <h3 className="text-lg font-bold text-dark">Portfolio</h3>
-              <p className="text-sm text-gray-600 mt-2">Showcase your work</p>
-            </Link>
+          {(hasRole('business-owner')) && (
+             <Link
+                to="/dashboard"
+                className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition text-center border-t-4 border-green-500"
+              >
+                <div className="text-4xl mb-3">📊</div>
+                <h3 className="text-lg font-bold text-dark">Transaction Dashboard</h3>
+                <p className="text-sm text-gray-600 mt-2">Earnings & Job Requests</p>
+              </Link>
           )}
 
           <Link
