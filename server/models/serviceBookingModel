@@ -1,0 +1,40 @@
+const mongoose = require('mongoose');
+
+const serviceBookingSchema = mongoose.Schema({
+    buyer: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
+    seller: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
+    serviceType: {
+        type: String, 
+        required: true 
+    },
+    description: {
+        type: String,
+        required: true
+    },
+    amount: {
+        type: Number,
+        required: true
+    },
+    status: {
+        type: String,
+        enum: ['Pending', 'Accepted', 'Completed', 'Cancelled'],
+        default: 'Pending'
+    },
+    paymentStatus: {
+        type: String,
+        enum: ['Unpaid', 'Paid'],
+        default: 'Unpaid' 
+    }
+}, {
+    timestamps: true
+});
+
+module.exports = mongoose.model('ServiceBooking', serviceBookingSchema);
