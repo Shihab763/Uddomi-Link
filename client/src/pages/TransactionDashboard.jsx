@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 
-
 const TransactionDashboard = () => {
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -15,7 +14,6 @@ const TransactionDashboard = () => {
 
     const fetchBookings = async () => {
         try {
-
             const res = await fetch('http://localhost:5000/api/service-bookings/my-bookings', {
                 headers: { 'Authorization': `Bearer ${user.token}` }
             });
@@ -32,7 +30,6 @@ const TransactionDashboard = () => {
     };
 
     const calculateStats = (data) => {
-        // Calculate stats only for jobs where I am the SELLER
         const mySales = data.filter(b => b.seller._id === user._id);
         
         const totalEarned = mySales
@@ -52,7 +49,6 @@ const TransactionDashboard = () => {
 
     const handleStatusUpdate = async (id, newStatus) => {
         try {
-       
             const res = await fetch(`http://localhost:5000/api/service-bookings/${id}/status`, {
                 method: 'PUT',
                 headers: {
@@ -73,7 +69,8 @@ const TransactionDashboard = () => {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <Navbar />
+            {/* Navbar is removed from here because it's already in App.jsx */}
+            
             <div className="container mx-auto p-6 max-w-5xl">
                 <h1 className="text-3xl font-bold mb-6">📊 Transaction Dashboard</h1>
 
