@@ -30,6 +30,9 @@ import AnalyticsPage from './pages/AnalyticsPage';
 import CustomOrderRequests from './pages/CustomOrderRequests';
 import CreateCustomOrder from './pages/CreateCustomOrder';
 import MicrofinanceDashboard from './pages/MicrofinanceDashboard'; 
+import SuccessStories from './pages/SuccessStories';
+import Forum from './pages/Forum';
+
 
 function App() {
   return (
@@ -53,6 +56,8 @@ function App() {
           <Route path="/booking-requests" element={<BookingRequests />} />
           <Route path="/dashboard" element={<TransactionDashboard />} />
           <Route path="/microfinance" element={<MicrofinanceDashboard />} />
+          <Route path="/stories" element={<SuccessStories />} />
+          <Route path="/forum" element={<Forum />} />
 
           <Route
             path="/skill-hub"
