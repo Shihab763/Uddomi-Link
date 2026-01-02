@@ -4,7 +4,7 @@ import RoleRequestModal from '../components/RoleRequestModal';
 import ReportSellerModal from "../components/ReportSellerModal";
 import BookSellerModal from "../components/BookSellerModal";
 import OfferMentorshipModal from "../components/OfferMentorshipModal";
-
+import HireModal from '../components/HireModal';
 
 function UserProfile() {
     const { userId } = useParams();
@@ -25,8 +25,7 @@ function UserProfile() {
     const [mentorshipSubmitting, setMentorshipSubmitting] = useState(false);
     const [mentorshipError, setMentorshipError] = useState("");
     const [mentorshipSuccess, setMentorshipSuccess] = useState("");
-
-
+    const [showHireModal, setShowHireModal] = useState(false);
 
     const currentUser = JSON.parse(localStorage.getItem('user'));
     const isRegularUser = currentUser?.roles?.includes('user') &&
@@ -36,7 +35,6 @@ function UserProfile() {
     const currentUserId = currentUser?._id;
     const isNgoUser = currentUser?.roles?.includes("ngo");
     
-
     useEffect(() => {
         fetchProfile();
     }, [userId]);
@@ -100,8 +98,6 @@ function UserProfile() {
         setReportSuccess("");
 
         try {
-
-
             const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
             const token = currentUser?.token || currentUser?.accessToken || "";
 
@@ -112,24 +108,108 @@ function UserProfile() {
                     ...(token ? { Authorization: `Bearer ${token}` } : {}),
                 },
                 body: JSON.stringify({
-                sellerId: viewedUserId,
-                reason,
-                details,
-            }),
-        });
+                    sellerId: viewedUserId,
+                    reason,
+                    details,
+                }),
+            });
 
-        if (!res.ok) {
-            const msg = await res.text();
-            throw new Error(msg || "Failed to submit report");
+            if (!res.ok) {
+                const msg = await res.text();
+                throw new Error(msg || "Failed to submit report");
+            }
+
+            setReportSuccess("Report submitted successfully.");
+            setShowReportModal(false);
+        } catch (err) {
+            setReportError("Could not submit report right now.");
+        } finally {
+            setReportSubmitting(false);
         }
+    };
 
-        setReportSuccess("Report submitted successfully.");
-        setShowReportModal(false);
-      } catch (err) {
-        setReportError("Could not submit report right now. (Backend will be added next.)");
-      } finally {
-        setReportSubmitting(false);
-      }
+    const handleBookingSubmit = async ({ date, timeSlot, note }) => {
+        setBookingSubmitting(true);
+        setBookingError("");
+        setBookingSuccess("");
+
+        try {
+            const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
+            const token = currentUser?.token || currentUser?.accessToken || "";
+
+            if (!token) {
+                setBookingError("You must be logged in to book a seller.");
+                setBookingSubmitting(false);
+                return;
+            }
+
+            if (!viewedUserId) {
+                setBookingError("Seller not loaded yet. Please try again.");
+                setBookingSubmitting(false);
+                return;
+            }
+
+            const res = await fetch(`${API_BASE}/api/bookings`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    providerId: viewedUserId,
+                    date,
+                    timeSlot,
+                    note: note || "",
+                }),
+            });
+
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                throw new Error(data.message || "Failed to create booking");
+            }
+
+            setBookingSuccess("✅ Booking request submitted!");
+            setShowBookingModal(false);
+        } catch (err) {
+            setBookingError(err.message || "Could not submit booking right now.");
+        } finally {
+            setBookingSubmitting(false);
+        }
+    };
+
+    const handleMentorshipSubmit = async ({ message }) => {
+        setMentorshipSubmitting(true);
+        setMentorshipError("");
+        setMentorshipSuccess("");
+
+        try {
+            const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
+            const token = currentUser?.token || currentUser?.accessToken || "";
+
+            const res = await fetch(`${API_BASE}/api/mentorship/offers`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                },
+                body: JSON.stringify({
+                    businessOwnerId: viewedUserId,
+                    message: message || "",
+                }),
+            });
+
+            if (!res.ok) {
+                const text = await res.text();
+                throw new Error(text || "Failed to send mentorship offer");
+            }
+
+            setMentorshipSuccess("Mentorship offer sent.");
+            setShowMentorshipModal(false);
+        } catch (err) {
+            setMentorshipError(err.message || "Could not send mentorship offer.");
+        } finally {
+            setMentorshipSubmitting(false);
+        }
     };
 
     if (loading) {
@@ -148,7 +228,6 @@ function UserProfile() {
         );
     }
 
-
     if (!profileData) {
         return (
             <div className="min-h-screen bg-light flex items-center justify-center">
@@ -156,93 +235,6 @@ function UserProfile() {
             </div>
         );
     }
-    const handleBookingSubmit = async ({ date, timeSlot, note }) => {
-    setBookingSubmitting(true);
-    setBookingError("");
-    setBookingSuccess("");
-
-    try {
-        const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
-        const token = currentUser?.token || currentUser?.accessToken || "";
-
-        if (!token) {
-            setBookingError("You must be logged in to book a seller.");
-            setBookingSubmitting(false);
-            return;
-        }
-
-        if (!viewedUserId) {
-            setBookingError("Seller not loaded yet. Please try again.");
-            setBookingSubmitting(false);
-            return;
-        }
-
-        const res = await fetch(`${API_BASE}/api/bookings`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-                providerId: viewedUserId,
-                date,
-                timeSlot,
-                note: note || "",
-            }),
-        });
-
-        if (!res.ok) {
-            const data = await res.json().catch(() => ({}));
-            throw new Error(data.message || "Failed to create booking");
-        }
-
-        setBookingSuccess("✅ Booking request submitted!");
-        setShowBookingModal(false);
-    } catch (err) {
-        setBookingError(err.message || "Could not submit booking right now.");
-    } finally {
-        setBookingSubmitting(false);
-    }
-};
-
-  const handleMentorshipSubmit = async ({ message }) => {
-    setMentorshipSubmitting(true);
-    setMentorshipError("");
-    setMentorshipSuccess("");
-
-    try {
-      const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
-      const token = currentUser?.token || currentUser?.accessToken || "";
-
-      const res = await fetch(`${API_BASE}/api/mentorship/offers`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({
-          businessOwnerId: viewedUserId,
-          message: message || "",
-        }),
-      });
-
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || "Failed to send mentorship offer");
-      }
-
-      setMentorshipSuccess("Mentorship offer sent.");
-      setShowMentorshipModal(false);
-    } catch (err) {
-      setMentorshipError(err.message || "Could not send mentorship offer.");
-    } finally {
-      setMentorshipSubmitting(false);
-    }
-  };
-
-
-    
-
 
     const { user, products, stats } = profileData;
     const viewedUser = user;
@@ -256,32 +248,27 @@ function UserProfile() {
 
     return (
         <div className="min-h-screen bg-light">
-            {/* Role Request Modal */}
             <RoleRequestModal
                 isOpen={showRoleModal}
                 onClose={() => setShowRoleModal(false)}
                 onSubmit={handleRoleRequest}
             />
 
-            {/* Cover Photo */}
             <div
                 className="h-64 bg-gradient-to-r from-primary to-secondary"
                 style={profile.coverPhoto ? { backgroundImage: `url(${profile.coverPhoto})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}
             />
 
             <div className="container mx-auto px-4">
-                {/* Profile Header */}
                 <div className="relative -mt-20 mb-8">
                     <div className="bg-white rounded-lg shadow-lg p-6">
                         <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
-                            {/* Profile Picture */}
                             <img
                                 src={profile.profilePicture || 'https://via.placeholder.com/150'}
                                 alt={user.name}
                                 className="w-32 h-32 rounded-full border-4 border-white shadow-lg object-cover"
                             />
 
-                            {/* User Info */}
                             <div className="flex-1 text-center md:text-left">
                                 <h1 className="text-3xl font-bold text-dark">{user.name}</h1>
                                 {profile.businessName && (
@@ -317,7 +304,6 @@ function UserProfile() {
                                             </Link>
                                         )}
 
-
                                         {isRegularUser && (
                                             <button
                                                 onClick={() => setShowRoleModal(true)}
@@ -328,11 +314,8 @@ function UserProfile() {
                                         )}
                                     </div>
                                 )}
-                                
-
                             </div>
 
-                            {/* Stats */}
                             <div className="flex gap-6 text-center">
                                 <div>
                                     <p className="text-2xl font-bold text-primary">{stats.productCount}</p>
@@ -348,9 +331,7 @@ function UserProfile() {
                 </div>
 
                 <div className="grid md:grid-cols-3 gap-6">
-                    {/* Left Column - About */}
                     <div className="md:col-span-2">
-                        {/* Bio */}
                         {profile.bio && (
                             <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
                                 <h2 className="text-2xl font-bold mb-4">About</h2>
@@ -358,7 +339,6 @@ function UserProfile() {
                             </div>
                         )}
 
-                        {/* Products */}
                         {products.length > 0 && (
                             <div className="bg-white rounded-lg shadow-lg p-6">
                                 <h2 className="text-2xl font-bold mb-4">Products</h2>
@@ -385,9 +365,7 @@ function UserProfile() {
                         )}
                     </div>
 
-                    {/* Right Column - Contact & Info */}
                     <div className="space-y-6">
-                        {/* Contact Info */}
                         <div className="bg-white rounded-lg shadow-lg p-6">
                             <h2 className="text-xl font-bold mb-4">Contact Info</h2>
 
@@ -417,7 +395,6 @@ function UserProfile() {
                             )}
                         </div>
 
-                        {/* Social Links */}
                         {profile.socialLinks && Object.values(profile.socialLinks).some(link => link) && (
                             <div className="bg-white rounded-lg shadow-lg p-6">
                                 <h2 className="text-xl font-bold mb-4">Social Links</h2>
@@ -476,7 +453,6 @@ function UserProfile() {
                             </div>
                         )}
 
-                        {/* Member Info */}
                         <div className="bg-white rounded-lg shadow-lg p-6">
                             <h2 className="text-xl font-bold mb-4">Member Info</h2>
                             <p className="text-sm text-gray-600 mb-2">
@@ -488,7 +464,7 @@ function UserProfile() {
                                 </p>
                             )}
                         </div>
-                        {/* Report Seller */}
+
                         {isLoggedIn && isSellerProfile && !isOwnProfile && (
                             <div className="bg-white rounded-lg shadow-lg p-6">
                                 <h2 className="text-lg font-bold mb-3 text-red-600">Report Seller</h2>
@@ -505,9 +481,9 @@ function UserProfile() {
                                 >
                                     🚩 Report This Seller
                                 </button>
-
                             </div>
                         )}
+
                         {isLoggedIn && isSellerProfile && !isOwnProfile && (
                             <div className="bg-white rounded-lg shadow-lg p-6 mt-4">
                                 <h2 className="text-lg font-bold mb-3 text-primary">Book Seller</h2>
@@ -521,14 +497,28 @@ function UserProfile() {
                                         setShowBookingModal(true);
                                     }}
                                     className="w-full rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
-                                
                                 >
                                     📅 Book Seller
                                 </button>
                             </div>    
                         )}
 
-                        {/* Offer Mentorship (NGO -> Business Owner) */}
+                        {/* --- NEW HIRE BUTTON --- */}
+                        {isLoggedIn && isSellerProfile && !isOwnProfile && (
+                            <div className="bg-white rounded-lg shadow-lg p-6 mt-4">
+                                <h2 className="text-lg font-bold mb-3 text-green-700">Hire for Project</h2>
+                                <p className="text-sm text-gray-600 mb-4">
+                                    Offer a fixed price for a specific service or custom project (e.g., Portrait, Bulk Order).
+                                </p>
+                                <button
+                                    onClick={() => setShowHireModal(true)}
+                                    className="w-full rounded-md bg-green-700 px-4 py-2 text-sm font-bold text-white hover:bg-green-800 transition shadow-sm"
+                                >
+                                    🤝 Hire Now
+                                </button>
+                            </div>
+                        )}
+
                         {isLoggedIn && isNgoUser && isSellerProfile && !isOwnProfile && (
                             <div className="bg-white rounded-lg shadow-lg p-6 mt-6">
                                 <h2 className="text-lg font-bold mb-3 text-dark">Offer Mentorship</h2>
@@ -548,11 +538,10 @@ function UserProfile() {
                                 </button>
                             </div>
                         )}
-
-
                     </div>
                 </div>
             </div>
+
             {reportError && (
                 <div className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-700">
                     {reportError}
@@ -577,7 +566,6 @@ function UserProfile() {
                 </div>
             )}
 
-
             {mentorshipError && (
                 <div className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-700">
                     {mentorshipError}
@@ -589,7 +577,6 @@ function UserProfile() {
                     {mentorshipSuccess}
                 </div>
             )}
-
 
             <ReportSellerModal
                 isOpen={showReportModal}
@@ -605,7 +592,6 @@ function UserProfile() {
                 sellerName={viewedUser?.name || viewedUser?.fullName || viewedUser?.email}
             />
 
-
             <OfferMentorshipModal
                 isOpen={showMentorshipModal}
                 onClose={() => setShowMentorshipModal(false)}
@@ -613,7 +599,13 @@ function UserProfile() {
                 businessOwnerName={viewedUser?.name || viewedUser?.fullName || viewedUser?.email}
             />
 
-
+            {showHireModal && (
+                <HireModal 
+                    sellerId={viewedUserId} 
+                    sellerName={viewedUser?.name} 
+                    onClose={() => setShowHireModal(false)} 
+                />
+            )}
         </div>
     );
 }
