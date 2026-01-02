@@ -45,4 +45,12 @@ const optionalAuth = async (req, res, next) => {
     }
 };
 
-module.exports = { protect, optionalAuth };
+const admin = (req, res, next) => {
+    if (req.user && req.user.roles && req.user.roles.includes('admin')) {
+        next();
+    } else {
+        res.status(401).json({ message: 'Not authorized as an admin' });
+    }
+};
+
+module.exports = { protect, optionalAuth, admin };
