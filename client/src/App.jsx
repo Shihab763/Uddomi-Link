@@ -22,8 +22,7 @@ import Creators from './pages/Creators';
 import Mentees from './pages/Mentees';
 import Mentors from './pages/Mentors';
 import MentorshipOffers from './pages/MentorshipOffers';
-
-
+import TransactionDashboard from './pages/TransactionDashboard';
 import AdvancedSearchPage from './pages/AdvancedSearchPage';
 import CustomOrdersPage from './pages/CustomOrdersPage';
 import WishlistPage from './pages/WishlistPage';
@@ -54,6 +53,7 @@ function App() {
           <Route path="/portfolio" element={<PortfolioPage />} />
           <Route path="/my-bookings" element={<MyBookings />} />
           <Route path="/booking-requests" element={<BookingRequests />} />
+          <Route path="/dashboard" element={<TransactionDashboard />} />
           <Route
             path="/skill-hub"
             element={
