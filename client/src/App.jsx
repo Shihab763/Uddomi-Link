@@ -29,9 +29,7 @@ import WishlistPage from './pages/WishlistPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import CustomOrderRequests from './pages/CustomOrderRequests';
 import CreateCustomOrder from './pages/CreateCustomOrder';
-
-
-
+import MicrofinanceDashboard from './pages/MicrofinanceDashboard'; 
 
 function App() {
   return (
@@ -54,6 +52,8 @@ function App() {
           <Route path="/my-bookings" element={<MyBookings />} />
           <Route path="/booking-requests" element={<BookingRequests />} />
           <Route path="/dashboard" element={<TransactionDashboard />} />
+          <Route path="/microfinance" element={<MicrofinanceDashboard />} />
+
           <Route
             path="/skill-hub"
             element={
@@ -71,7 +71,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
 
           <Route
             path="/creators"
@@ -108,7 +107,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
 
           <Route path="/custom-orders" element={<CustomOrdersPage />} />
           <Route path="/custom-order-requests" element={<CustomOrderRequests />} />
