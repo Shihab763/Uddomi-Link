@@ -37,6 +37,7 @@ app.use('/api/search', require('./routes/searchRoutes'));
 app.use('/api/notifications', require('./routes/notificationSystemRoutes'));
 app.use('/api/locationMap', require('./routes/locationMapRoutes'));
 app.use('/api/service-bookings', require('./routes/serviceBookingRoutes'));
+app.use('/api/microfinance', require('./routes/microfinanceRoutes'));
 // Database Connection
 const connectDB = async () => {
   try {
