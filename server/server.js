@@ -38,6 +38,8 @@ app.use('/api/notifications', require('./routes/notificationSystemRoutes'));
 app.use('/api/locationMap', require('./routes/locationMapRoutes'));
 app.use('/api/service-bookings', require('./routes/serviceBookingRoutes'));
 app.use('/api/microfinance', require('./routes/microfinanceRoutes'));
+app.use('/api/stories', require('./routes/successStoryRoutes'));
+app.use('/api/forum', require('./routes/forumRoutes'));
 // Database Connection
 const connectDB = async () => {
   try {
