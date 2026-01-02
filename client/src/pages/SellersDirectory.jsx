@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+// 1. Import the Map Component
+import LocationMap from '../components/LocationMap'; 
 
 function SellersDirectory() {
     const [sellers, setSellers] = useState([]);
@@ -49,6 +51,14 @@ function SellersDirectory() {
             </div>
 
             <div className="container mx-auto px-4 py-8">
+                
+                
+                <div className="mb-10">
+                    <h2 className="text-2xl font-bold text-gray-800 mb-4">📍 Find Talent Nearby</h2>
+                    <LocationMap />
+                </div>
+             
+
                 {/* Search */}
                 <div className="mb-8">
                     <input
