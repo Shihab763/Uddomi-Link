@@ -237,6 +237,27 @@ function Dashboard() {
             <h3 className="text-lg font-bold text-dark">Advanced Search</h3>
             <p className="text-sm text-gray-600 mt-2">Find exactly what you need</p>
           </Link>
+
+          {/* --- NEW COMMUNITY FEATURES --- */}
+          
+          <Link
+            to="/stories"
+            className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition text-center border-t-4 border-yellow-500"
+          >
+            <div className="text-4xl mb-3">🌟</div>
+            <h3 className="text-lg font-bold text-dark">Success Stories</h3>
+            <p className="text-sm text-gray-600 mt-2">Get Inspired</p>
+          </Link>
+
+          <Link
+            to="/forum"
+            className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition text-center border-t-4 border-blue-500"
+          >
+            <div className="text-4xl mb-3">💬</div>
+            <h3 className="text-lg font-bold text-dark">Forum</h3>
+            <p className="text-sm text-gray-600 mt-2">Join the discussion</p>
+          </Link>
+
         </div>
       </div>
     </div>
