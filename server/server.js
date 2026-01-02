@@ -36,6 +36,7 @@ app.use('/api/reports', require('./routes/reportRoutes'));
 app.use('/api/search', require('./routes/searchRoutes'));
 app.use('/api/notifications', require('./routes/notificationSystemRoutes'));
 app.use('/api/locationMap', require('./routes/locationMapRoutes'));
+app.use('/api/service-bookings', require('./routes/serviceBookingRoutes'));
 // Database Connection
 const connectDB = async () => {
   try {
