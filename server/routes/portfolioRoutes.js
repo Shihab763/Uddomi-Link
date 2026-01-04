@@ -1,16 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/authMiddleware');
-const upload = require('../middleware/uploadMiddleware');
+const { getPortfolio, updatePortfolio, addProject, deleteProject } = require('../controllers/portfolioController');
 
-const {
-  createPortfolio,
-  getMyPortfolios,
-  getPortfolioById,
-} = require('../controllers/portfolioController');
-
-router.post('/', protect, upload.single('media'), createPortfolio);
-router.get('/my', protect, getMyPortfolios);
-router.get('/:id', getPortfolioById);
+router.get('/:userId', getPortfolio);
+router.post('/', protect, updatePortfolio);
+router.post('/project', protect, addProject);
+router.delete('/project/:projectId', protect, deleteProject);
 
 module.exports = router;
