@@ -211,13 +211,19 @@ function Dashboard() {
               </Link>
           )}
 
+          {/* --- UPDATED CUSTOM ORDERS CARD --- */}
           <Link
             to="/custom-orders"
             className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition text-center border-t-4 border-blue-600"
           >
             <div className="text-4xl mb-3">✨</div>
             <h3 className="text-lg font-bold text-dark">Custom Orders</h3>
-            <p className="text-sm text-gray-600 mt-2">Request unique work</p>
+            <p className="text-sm text-gray-600 mt-2">
+              {hasRole('business-owner') 
+                ? 'Manage incoming requests' 
+                : 'Track your requests'
+              }
+            </p>
           </Link>
 
           <Link
