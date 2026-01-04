@@ -1,83 +1,99 @@
 const CustomOrder = require('../models/customOrderModel');
-const User = require('../models/userModel');
+const Notification = require('../models/notificationSystemModel'); // Using your friend's model
 
+// 1. Create Order & Notify Seller
 const createCustomOrder = async (req, res) => {
-  const { creatorId, portfolioId, details, budget, deadline } = req.body;
+    try {
+        const { sellerId, title, description, budget, deadline } = req.body;
 
-  if (!creatorId || !details) {
-    return res.status(400).json({ message: 'Creator and details are required' });
-  }
+        // Create the order
+        const order = await CustomOrder.create({
+            buyerId: req.user._id,
+            sellerId,
+            title,
+            description,
+            budget,
+            deadline
+        });
 
-  const creator = await User.findById(creatorId);
-  if (!creator) {
-    return res.status(404).json({ message: 'Creator not found' });
-  }
+        // TRIGGER NOTIFICATION FOR SELLER
+        await Notification.create({
+            user: sellerId, // Sent TO the seller
+            sender: req.user._id, // Sent BY the buyer
+            title: 'New Custom Order Request',
+            message: `${req.user.name} wants to hire you for a custom project: ${title}`,
+            type: 'custom_order_request',
+            link: '/custom-orders', // Clicking this takes seller to their dashboard tab
+            isRead: false
+        });
 
-  const order = await CustomOrder.create({
-    requester: req.user._id,
-    creator: creatorId,
-    portfolio: portfolioId || null,
-    details,
-    budget,
-    deadline,
-  });
-
-  const populated = await CustomOrder.findById(order._id)
-    .populate('requester', 'name email')
-    .populate('creator', 'name email')
-    .populate('portfolio');
-
-  res.status(201).json(populated);
+        res.status(201).json(order);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
 };
 
-const getMyCustomOrders = async (req, res) => {
-  const orders = await CustomOrder.find({ requester: req.user._id })
-    .sort({ createdAt: -1 })
-    .populate('creator', 'name email')
-    .populate('portfolio');
-
-  res.json(orders);
+// 2. Get Orders (For Creator/Seller Dashboard)
+const getReceivedOrders = async (req, res) => {
+    try {
+        const orders = await CustomOrder.find({ sellerId: req.user._id })
+            .populate('buyerId', 'name email')
+            .sort({ createdAt: -1 });
+        res.json(orders);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
 };
 
-const getCreatorCustomOrders = async (req, res) => {
-  const orders = await CustomOrder.find({ creator: req.user._id })
-    .sort({ createdAt: -1 })
-    .populate('requester', 'name email')
-    .populate('portfolio');
-
-  res.json(orders);
+// 3. Get Orders (For Customer Dashboard)
+const getSentOrders = async (req, res) => {
+    try {
+        const orders = await CustomOrder.find({ buyerId: req.user._id })
+            .populate('sellerId', 'name email')
+            .sort({ createdAt: -1 });
+        res.json(orders);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
 };
 
-const updateCustomOrderStatus = async (req, res) => {
-  const { status } = req.body;
+// 4. Update Status & Notify Buyer
+const updateOrderStatus = async (req, res) => {
+    try {
+        const { status } = req.body; // 'accepted' or 'rejected'
+        const orderId = req.params.id;
 
-  if (!['accepted', 'rejected', 'completed'].includes(status)) {
-    return res.status(400).json({ message: 'Invalid status' });
-  }
+        const order = await CustomOrder.findById(orderId);
+        if (!order) return res.status(404).json({ message: 'Order not found' });
 
-  const order = await CustomOrder.findById(req.params.id);
-  if (!order) {
-    return res.status(404).json({ message: 'Order not found' });
-  }
+        // Security check: only the seller can update
+        if (order.sellerId.toString() !== req.user._id.toString()) {
+            return res.status(401).json({ message: 'Not authorized' });
+        }
 
-  if (String(order.creator) !== String(req.user._id)) {
-    return res.status(403).json({ message: 'Not authorized' });
-  }
+        order.status = status;
+        await order.save();
 
-  order.status = status;
-  await order.save();
+        // TRIGGER NOTIFICATION FOR BUYER
+        await Notification.create({
+            user: order.buyerId, // Sent TO the buyer
+            sender: req.user._id, // Sent BY the seller
+            title: `Custom Order ${status === 'accepted' ? 'Accepted' : 'Rejected'}`,
+            message: `Your request "${order.title}" was ${status} by the creator.`,
+            type: 'custom_order_update',
+            link: '/custom-orders',
+            isRead: false
+        });
 
-  const populated = await CustomOrder.findById(order._id)
-    .populate('requester', 'name email')
-    .populate('creator', 'name email')
-    .populate('portfolio');
-
-  res.json(populated);
+        res.json(order);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
 };
 
 module.exports = {
-  createCustomOrder,
-  getMyCustomOrders,
-  getCreatorCustomOrders,
-  updateCustomOrderStatus,
+    createCustomOrder,
+    getReceivedOrders,
+    getSentOrders,
+    updateOrderStatus
 };
