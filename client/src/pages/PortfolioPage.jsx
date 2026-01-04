@@ -11,20 +11,15 @@ const PortfolioPage = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showProjectModal, setShowProjectModal] = useState(false);
 
-  
   const user = JSON.parse(localStorage.getItem('user'));
   const urlUserId = searchParams.get('userId'); 
-
   const targetUserId = urlUserId || user?._id;
   
-
   const isOwner = user && (user._id === targetUserId);
-
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!targetUserId) {
-        
         navigate('/login');
         return;
     }
@@ -45,15 +40,33 @@ const PortfolioPage = () => {
 
   if (loading) return <div className="flex h-screen items-center justify-center">Loading Showcase...</div>;
 
-
   
   const EditProfileModal = () => {
     const [formData, setFormData] = useState({
         bio: portfolio?.bio || '',
         experienceYears: portfolio?.experienceYears || 0,
         skills: portfolio?.skills?.join(', ') || '',
-        videoIntro: portfolio?.videoIntro || ''
     });
+
+
+    const [localAwards, setLocalAwards] = useState(portfolio?.awards || []);
+
+    const addAwardSlot = () => {
+        setLocalAwards([...localAwards, { title: '', year: new Date().getFullYear(), issuer: '' }]);
+    };
+
+   
+    const removeAwardSlot = (index) => {
+        const updated = localAwards.filter((_, i) => i !== index);
+        setLocalAwards(updated);
+    };
+
+   
+    const updateAward = (index, field, value) => {
+        const updated = [...localAwards];
+        updated[index][field] = value;
+        setLocalAwards(updated);
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -66,7 +79,8 @@ const PortfolioPage = () => {
                 },
                 body: JSON.stringify({
                     ...formData,
-                    skills: formData.skills.split(',').map(s => s.trim()).filter(s => s)
+                    skills: formData.skills.split(',').map(s => s.trim()).filter(s => s),
+                    awards: localAwards 
                 })
             });
             const updated = await res.json();
@@ -78,46 +92,97 @@ const PortfolioPage = () => {
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg w-full max-w-lg">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
+            <div className="bg-white p-6 rounded-lg w-full max-w-2xl my-10 relative">
+                <button onClick={() => setShowEditModal(false)} className="absolute top-4 right-4 text-2xl">&times;</button>
                 <h2 className="text-2xl font-bold mb-4">Edit Portfolio Details</h2>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-bold">Bio</label>
-                        <textarea 
-                            className="w-full border p-2 rounded"
-                            value={formData.bio}
-                            onChange={e => setFormData({...formData, bio: e.target.value})}
-                        />
+                
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* General Info Section */}
+                    <div className="space-y-4 border-b pb-4">
+                        <h3 className="font-bold text-lg text-primary">General Information</h3>
+                        <div>
+                            <label className="block text-sm font-bold">Bio</label>
+                            <textarea 
+                                className="w-full border p-2 rounded"
+                                rows="3"
+                                value={formData.bio}
+                                onChange={e => setFormData({...formData, bio: e.target.value})}
+                            />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-bold">Years of Experience</label>
+                                <input 
+                                    type="number" 
+                                    className="w-full border p-2 rounded"
+                                    value={formData.experienceYears}
+                                    onChange={e => setFormData({...formData, experienceYears: e.target.value})}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold">Skills (comma separated)</label>
+                                <input 
+                                    type="text" 
+                                    className="w-full border p-2 rounded"
+                                    placeholder="Woodworking, Pottery"
+                                    value={formData.skills}
+                                    onChange={e => setFormData({...formData, skills: e.target.value})}
+                                />
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <label className="block text-sm font-bold">Years of Experience</label>
-                        <input 
-                            type="number" 
-                            className="w-full border p-2 rounded"
-                            value={formData.experienceYears}
-                            onChange={e => setFormData({...formData, experienceYears: e.target.value})}
-                        />
+
+                    {/* Awards Section */}
+                    <div className="space-y-4">
+                        <div className="flex justify-between items-center">
+                            <h3 className="font-bold text-lg text-primary">Awards & Recognition</h3>
+                            <button type="button" onClick={addAwardSlot} className="text-sm bg-gray-200 px-3 py-1 rounded hover:bg-gray-300">+ Add Award</button>
+                        </div>
+                        
+                        {localAwards.length === 0 && <p className="text-sm text-gray-500 italic">No awards added yet.</p>}
+
+                        {localAwards.map((award, index) => (
+                            <div key={index} className="flex gap-2 items-start bg-gray-50 p-3 rounded border">
+                                <div className="flex-1 space-y-2">
+                                    <input 
+                                        placeholder="Award Title (e.g. Best Artisan)" 
+                                        className="w-full border p-1 rounded text-sm"
+                                        value={award.title}
+                                        onChange={(e) => updateAward(index, 'title', e.target.value)}
+                                        required
+                                    />
+                                    <div className="flex gap-2">
+                                        <input 
+                                            placeholder="Issuer (e.g. Local Fair)" 
+                                            className="w-1/2 border p-1 rounded text-sm"
+                                            value={award.issuer}
+                                            onChange={(e) => updateAward(index, 'issuer', e.target.value)}
+                                        />
+                                        <input 
+                                            type="number"
+                                            placeholder="Year" 
+                                            className="w-1/2 border p-1 rounded text-sm"
+                                            value={award.year}
+                                            onChange={(e) => updateAward(index, 'year', e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+                                <button type="button" onClick={() => removeAwardSlot(index)} className="text-red-500 font-bold px-2">&times;</button>
+                            </div>
+                        ))}
                     </div>
-                    <div>
-                        <label className="block text-sm font-bold">Skills (comma separated)</label>
-                        <input 
-                            type="text" 
-                            className="w-full border p-2 rounded"
-                            placeholder="Woodworking, Pottery, Painting"
-                            value={formData.skills}
-                            onChange={e => setFormData({...formData, skills: e.target.value})}
-                        />
-                    </div>
-                    <div className="flex justify-end gap-2">
+
+                    <div className="flex justify-end gap-2 pt-4">
                         <button type="button" onClick={() => setShowEditModal(false)} className="px-4 py-2 text-gray-600">Cancel</button>
-                        <button type="submit" className="px-4 py-2 bg-black text-white rounded">Save Changes</button>
+                        <button type="submit" className="px-4 py-2 bg-black text-white rounded font-bold">Save Changes</button>
                     </div>
                 </form>
             </div>
         </div>
     );
   };
+
 
   const AddProjectModal = () => {
     const [projectData, setProjectData] = useState({
@@ -181,6 +246,7 @@ const PortfolioPage = () => {
                             onChange={e => setProjectData({...projectData, imageUrl: e.target.value})}
                             required
                         />
+                        <p className="text-xs text-gray-500 mt-1">Make sure this is a direct link to an image (ends in .jpg, .png, etc).</p>
                     </div>
                     <div>
                         <label className="block text-sm font-bold">Tags (comma separated)</label>
@@ -284,10 +350,14 @@ const PortfolioPage = () => {
                     {portfolio?.projects?.length > 0 ? (
                         portfolio.projects.map((project) => (
                             <div key={project._id} className="group relative overflow-hidden rounded-xl shadow-lg bg-gray-50">
-                                <div className="h-64 overflow-hidden">
+                                <div className="h-64 overflow-hidden bg-gray-200">
                                     <img 
                                         src={project.imageUrl} 
                                         alt={project.title} 
+                                        onError={(e) => {
+                                            e.target.onerror = null; 
+                                            e.target.src = "https://placehold.co/600x400?text=Project+Image"
+                                        }}
                                         className="w-full h-full object-cover transform group-hover:scale-110 transition duration-500"
                                     />
                                 </div>
@@ -315,6 +385,13 @@ const PortfolioPage = () => {
         {/* AWARDS SECTION */}
         {activeTab === 'awards' && (
             <div className="max-w-3xl mx-auto space-y-6">
+                {isOwner && portfolio?.awards?.length === 0 && (
+                    <div className="text-center mb-6">
+                        <p className="text-gray-500 mb-4">No awards listed yet.</p>
+                        <button onClick={() => setShowEditModal(true)} className="text-primary font-bold hover:underline">Click "Edit Portfolio" to add awards</button>
+                    </div>
+                )}
+
                 {portfolio?.awards?.map((award, i) => (
                     <div key={i} className="flex items-center gap-6 bg-white p-6 rounded-lg shadow border border-gray-100">
                         <div className="bg-yellow-100 text-yellow-600 w-16 h-16 rounded-full flex items-center justify-center text-3xl">
@@ -326,9 +403,6 @@ const PortfolioPage = () => {
                         </div>
                     </div>
                 ))}
-                {(!portfolio?.awards || portfolio.awards.length === 0) && (
-                    <p className="text-center text-gray-500 py-10">No awards listed yet.</p>
-                )}
             </div>
         )}
       </div>
