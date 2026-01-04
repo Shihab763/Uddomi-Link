@@ -503,7 +503,6 @@ function UserProfile() {
                             </div>    
                         )}
 
-                        {/* --- NEW HIRE BUTTON --- */}
                         {isLoggedIn && isSellerProfile && !isOwnProfile && (
                             <div className="bg-white rounded-lg shadow-lg p-6 mt-4">
                                 <h2 className="text-lg font-bold mb-3 text-green-700">Hire for Project</h2>
@@ -519,11 +518,28 @@ function UserProfile() {
                             </div>
                         )}
 
+                        {/* --- NEW CUSTOM ORDER BUTTON ADDED HERE --- */}
+                        {isLoggedIn && isSellerProfile && !isOwnProfile && (
+                            <div className="bg-white rounded-lg shadow-lg p-6 mt-4">
+                                <h2 className="text-lg font-bold mb-3 text-orange-600">Request Custom Order</h2>
+                                <p className="text-sm text-gray-600 mb-4">
+                                    Want something unique? Request a custom made item or service specifically for you.
+                                </p>
+                                <Link
+                                    to={`/create-custom-order?sellerId=${viewedUserId}`}
+                                    className="block w-full text-center rounded-md bg-orange-600 px-4 py-2 text-sm font-bold text-white hover:bg-orange-700 transition shadow-sm"
+                                >
+                                    ✨ Request Custom Order
+                                </Link>
+                            </div>
+                        )}
+                        {/* ------------------------------------------ */}
+
                         {isLoggedIn && isNgoUser && isSellerProfile && !isOwnProfile && (
                             <div className="bg-white rounded-lg shadow-lg p-6 mt-6">
                                 <h2 className="text-lg font-bold mb-3 text-dark">Offer Mentorship</h2>
                                 <p className="text-sm text-gray-600 mb-4">
-                                         You can offer mentorship to help this business owner grow with action plans and training recommendations.
+                                          You can offer mentorship to help this business owner grow with action plans and training recommendations.
                                 </p>
                                 <button
                                     onClick={() => {
