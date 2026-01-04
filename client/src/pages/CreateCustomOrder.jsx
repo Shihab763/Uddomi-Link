@@ -1,107 +1,89 @@
-import { useEffect, useState } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
-function CreateCustomOrder() {
-  const [params] = useSearchParams();
+const CreateCustomOrder = () => {
+  const [searchParams] = useSearchParams();
+  const sellerId = searchParams.get('sellerId');
   const navigate = useNavigate();
-
   const user = JSON.parse(localStorage.getItem('user'));
-  const creatorId = params.get('creatorId');
-  const portfolioId = params.get('portfolioId');
 
-  const [details, setDetails] = useState('');
-  const [budget, setBudget] = useState('');
-  const [deadline, setDeadline] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    budget: '',
+    deadline: ''
+  });
 
-  useEffect(() => {
-    if (!user) {
-      navigate('/login');
-    }
-  }, [user, navigate]);
-
-  const submit = async () => {
-    if (!details.trim()) {
-      setError('Please describe what you want');
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     try {
       const res = await fetch('http://localhost:5000/api/custom-orders', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${user.token}`,
+          'Authorization': `Bearer ${user.token}`
         },
-        body: JSON.stringify({
-          creatorId,
-          portfolioId,
-          details,
-          budget: budget || undefined,
-          deadline: deadline || undefined,
-        }),
+        body: JSON.stringify({ ...formData, sellerId })
       });
 
-      if (!res.ok) {
-        throw new Error('Failed to submit custom order');
+      if (res.ok) {
+        alert('Request sent! The creator has been notified.');
+        navigate('/custom-orders');
       }
-
-      navigate('/dashboard');
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+    } catch (error) {
+      console.error(error);
     }
   };
 
   return (
-    <div className="min-h-screen bg-light flex items-center justify-center">
-      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-lg">
-        <h1 className="text-2xl font-bold mb-4">✨ Request Custom Work</h1>
-
-        {error && (
-          <div className="mb-4 bg-red-50 text-red-700 p-3 rounded">
-            {error}
+    <div className="container mx-auto p-6 max-w-2xl">
+      <h1 className="text-3xl font-bold mb-6 text-green-900">Request Custom Order</h1>
+      <form onSubmit={handleSubmit} className="bg-white p-8 shadow-lg rounded-lg space-y-4">
+        <div>
+          <label className="block font-bold text-gray-700">Project Title</label>
+          <input 
+            type="text" 
+            required
+            className="w-full border p-2 rounded mt-1"
+            placeholder="e.g. 50 Custom Painted Cat Beds"
+            onChange={e => setFormData({...formData, title: e.target.value})}
+          />
+        </div>
+        <div>
+          <label className="block font-bold text-gray-700">Description</label>
+          <textarea 
+            required
+            className="w-full border p-2 rounded mt-1 h-32"
+            placeholder="Describe materials, colors, dimensions..."
+            onChange={e => setFormData({...formData, description: e.target.value})}
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block font-bold text-gray-700">Budget (BDT)</label>
+            <input 
+              type="number" 
+              required
+              className="w-full border p-2 rounded mt-1"
+              onChange={e => setFormData({...formData, budget: e.target.value})}
+            />
           </div>
-        )}
-
-        <textarea
-          className="w-full border p-3 rounded mb-4"
-          rows="5"
-          placeholder="Describe what you want..."
-          value={details}
-          onChange={(e) => setDetails(e.target.value)}
-        />
-
-        <input
-          type="number"
-          className="w-full border p-3 rounded mb-4"
-          placeholder="Budget (optional)"
-          value={budget}
-          onChange={(e) => setBudget(e.target.value)}
-        />
-
-        <input
-          type="date"
-          className="w-full border p-3 rounded mb-6"
-          value={deadline}
-          onChange={(e) => setDeadline(e.target.value)}
-        />
-
-        <button
-          onClick={submit}
-          disabled={loading}
-          className="w-full bg-primary text-white py-3 rounded font-bold hover:bg-green-800 transition disabled:opacity-50"
-        >
-          {loading ? 'Submitting...' : 'Submit Custom Order'}
+          <div>
+            <label className="block font-bold text-gray-700">Deadline</label>
+            <input 
+              type="date" 
+              required
+              className="w-full border p-2 rounded mt-1"
+              onChange={e => setFormData({...formData, deadline: e.target.value})}
+            />
+          </div>
+        </div>
+        <button type="submit" className="w-full bg-green-700 text-white font-bold py-3 rounded hover:bg-green-800 transition">
+          Submit Request
         </button>
-      </div>
+      </form>
     </div>
   );
-}
+};
 
 export default CreateCustomOrder;
