@@ -7,16 +7,24 @@ const PortfolioPage = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('projects');
   
-  // Logic to view own portfolio or someone else's
+
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showProjectModal, setShowProjectModal] = useState(false);
+
+  
   const user = JSON.parse(localStorage.getItem('user'));
-  const urlUserId = searchParams.get('userId'); // /portfolio?userId=123
+  const urlUserId = searchParams.get('userId'); 
+
   const targetUserId = urlUserId || user?._id;
-  const isOwner = user && user._id === targetUserId;
+  
+
+  const isOwner = user && (user._id === targetUserId);
 
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!targetUserId) {
+        
         navigate('/login');
         return;
     }
@@ -36,6 +44,162 @@ const PortfolioPage = () => {
   };
 
   if (loading) return <div className="flex h-screen items-center justify-center">Loading Showcase...</div>;
+
+
+  
+  const EditProfileModal = () => {
+    const [formData, setFormData] = useState({
+        bio: portfolio?.bio || '',
+        experienceYears: portfolio?.experienceYears || 0,
+        skills: portfolio?.skills?.join(', ') || '',
+        videoIntro: portfolio?.videoIntro || ''
+    });
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const res = await fetch('http://localhost:5000/api/portfolios', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${user.token}`
+                },
+                body: JSON.stringify({
+                    ...formData,
+                    skills: formData.skills.split(',').map(s => s.trim()).filter(s => s)
+                })
+            });
+            const updated = await res.json();
+            setPortfolio({ ...portfolio, ...updated });
+            setShowEditModal(false);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg w-full max-w-lg">
+                <h2 className="text-2xl font-bold mb-4">Edit Portfolio Details</h2>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-bold">Bio</label>
+                        <textarea 
+                            className="w-full border p-2 rounded"
+                            value={formData.bio}
+                            onChange={e => setFormData({...formData, bio: e.target.value})}
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-bold">Years of Experience</label>
+                        <input 
+                            type="number" 
+                            className="w-full border p-2 rounded"
+                            value={formData.experienceYears}
+                            onChange={e => setFormData({...formData, experienceYears: e.target.value})}
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-bold">Skills (comma separated)</label>
+                        <input 
+                            type="text" 
+                            className="w-full border p-2 rounded"
+                            placeholder="Woodworking, Pottery, Painting"
+                            value={formData.skills}
+                            onChange={e => setFormData({...formData, skills: e.target.value})}
+                        />
+                    </div>
+                    <div className="flex justify-end gap-2">
+                        <button type="button" onClick={() => setShowEditModal(false)} className="px-4 py-2 text-gray-600">Cancel</button>
+                        <button type="submit" className="px-4 py-2 bg-black text-white rounded">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+  };
+
+  const AddProjectModal = () => {
+    const [projectData, setProjectData] = useState({
+        title: '',
+        description: '',
+        imageUrl: '',
+        tags: ''
+    });
+
+    const handleProjectSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const res = await fetch('http://localhost:5000/api/portfolios/project', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${user.token}`
+                },
+                body: JSON.stringify({
+                    ...projectData,
+                    tags: projectData.tags.split(',').map(t => t.trim())
+                })
+            });
+            const updated = await res.json();
+            setPortfolio(updated);
+            setShowProjectModal(false);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg w-full max-w-lg">
+                <h2 className="text-2xl font-bold mb-4">Add New Project</h2>
+                <form onSubmit={handleProjectSubmit} className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-bold">Project Title</label>
+                        <input 
+                            className="w-full border p-2 rounded"
+                            value={projectData.title}
+                            onChange={e => setProjectData({...projectData, title: e.target.value})}
+                            required
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-bold">Description</label>
+                        <textarea 
+                            className="w-full border p-2 rounded"
+                            value={projectData.description}
+                            onChange={e => setProjectData({...projectData, description: e.target.value})}
+                            required
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-bold">Image URL</label>
+                        <input 
+                            className="w-full border p-2 rounded"
+                            placeholder="http://..."
+                            value={projectData.imageUrl}
+                            onChange={e => setProjectData({...projectData, imageUrl: e.target.value})}
+                            required
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-bold">Tags (comma separated)</label>
+                        <input 
+                            className="w-full border p-2 rounded"
+                            placeholder="Chair, Restoration, Oak"
+                            value={projectData.tags}
+                            onChange={e => setProjectData({...projectData, tags: e.target.value})}
+                        />
+                    </div>
+                    <div className="flex justify-end gap-2">
+                        <button type="button" onClick={() => setShowProjectModal(false)} className="px-4 py-2 text-gray-600">Cancel</button>
+                        <button type="submit" className="px-4 py-2 bg-green-600 text-white rounded">Add Project</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+  };
 
   return (
     <div className="bg-white min-h-screen font-sans text-gray-800">
@@ -69,9 +233,12 @@ const PortfolioPage = () => {
             ))}
           </div>
 
-          {/* Action Buttons for Owner */}
+          {/* Edit Button for Owner */}
           {isOwner && (
-            <button className="mt-6 bg-white text-gray-900 px-6 py-2 rounded-lg font-bold hover:bg-gray-100 transition">
+            <button 
+                onClick={() => setShowEditModal(true)}
+                className="mt-6 bg-white text-gray-900 px-6 py-2 rounded-lg font-bold hover:bg-gray-100 transition flex items-center gap-2"
+            >
               ✏️ Edit Portfolio
             </button>
           )}
@@ -93,12 +260,6 @@ const PortfolioPage = () => {
             >
                 🏆 Awards & Recognition
             </button>
-            <button 
-                onClick={() => setActiveTab('videos')}
-                className={`text-lg font-bold pb-2 border-b-4 transition ${activeTab === 'videos' ? 'border-yellow-500 text-black' : 'border-transparent text-gray-500'}`}
-            >
-                🎥 Behind the Scenes
-            </button>
         </div>
       </div>
 
@@ -107,36 +268,47 @@ const PortfolioPage = () => {
         
         {/* PROJECTS GRID */}
         {activeTab === 'projects' && (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {portfolio?.projects?.length > 0 ? (
-                    portfolio.projects.map((project) => (
-                        <div key={project._id} className="group relative overflow-hidden rounded-xl shadow-lg bg-gray-50">
-                            <div className="h-64 overflow-hidden">
-                                <img 
-                                    src={project.imageUrl} 
-                                    alt={project.title} 
-                                    className="w-full h-full object-cover transform group-hover:scale-110 transition duration-500"
-                                />
-                            </div>
-                            <div className="p-6">
-                                <h3 className="text-xl font-bold mb-2">{project.title}</h3>
-                                <p className="text-gray-600 text-sm line-clamp-3 mb-4">{project.description}</p>
-                                <div className="flex flex-wrap gap-2">
-                                    {project.tags?.map(tag => (
-                                        <span key={tag} className="text-xs bg-gray-200 px-2 py-1 rounded text-gray-700">#{tag}</span>
-                                    ))}
-                                </div>
-                            </div>
-                            {/* Overlay on Hover */}
-                            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition duration-300 pointer-events-none"></div>
-                        </div>
-                    ))
-                ) : (
-                    <div className="col-span-full text-center py-20 text-gray-500">
-                        <p className="text-xl">No projects showcased yet.</p>
-                        {isOwner && <p className="mt-2">Click "Edit Portfolio" to add your first masterpiece!</p>}
+            <div>
+                {isOwner && (
+                    <div className="mb-8 text-center">
+                        <button 
+                            onClick={() => setShowProjectModal(true)}
+                            className="bg-green-600 text-white px-6 py-3 rounded-full font-bold hover:bg-green-700 shadow-lg"
+                        >
+                            + Add New Project
+                        </button>
                     </div>
                 )}
+
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {portfolio?.projects?.length > 0 ? (
+                        portfolio.projects.map((project) => (
+                            <div key={project._id} className="group relative overflow-hidden rounded-xl shadow-lg bg-gray-50">
+                                <div className="h-64 overflow-hidden">
+                                    <img 
+                                        src={project.imageUrl} 
+                                        alt={project.title} 
+                                        className="w-full h-full object-cover transform group-hover:scale-110 transition duration-500"
+                                    />
+                                </div>
+                                <div className="p-6">
+                                    <h3 className="text-xl font-bold mb-2">{project.title}</h3>
+                                    <p className="text-gray-600 text-sm line-clamp-3 mb-4">{project.description}</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {project.tags?.map(tag => (
+                                            <span key={tag} className="text-xs bg-gray-200 px-2 py-1 rounded text-gray-700">#{tag}</span>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        ))
+                    ) : (
+                        <div className="col-span-full text-center py-20 text-gray-500">
+                            <p className="text-xl">No projects showcased yet.</p>
+                            {isOwner && <p className="mt-2">Click "+ Add New Project" above to start building your gallery!</p>}
+                        </div>
+                    )}
+                </div>
             </div>
         )}
 
@@ -181,6 +353,10 @@ const PortfolioPage = () => {
             </div>
         </div>
       )}
+
+      {/* RENDER MODALS */}
+      {showEditModal && <EditProfileModal />}
+      {showProjectModal && <AddProjectModal />}
     </div>
   );
 };
