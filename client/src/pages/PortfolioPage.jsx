@@ -1,487 +1,188 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 
-function PortfolioPage() {
-    const navigate = useNavigate();
-    const { id } = useParams();
-    const [activeTab, setActiveTab] = useState('my-portfolio');
-    const [portfolios, setPortfolios] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [showForm, setShowForm] = useState(false);
-    const [editingPortfolio, setEditingPortfolio] = useState(null);
-    const [formData, setFormData] = useState({
-        title: '',
-        description: '',
-        mediaType: 'image',
-        mediaUrl: '',
-        thumbnailUrl: '',
-        category: 'painting',
-        tags: '',
-        skills: '',
-        acceptsCustomOrders: false,
-        priceRange: { min: '', max: '' }
-    });
+const PortfolioPage = () => {
+  const [searchParams] = useSearchParams();
+  const [portfolio, setPortfolio] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('projects');
+  
+  // Logic to view own portfolio or someone else's
+  const user = JSON.parse(localStorage.getItem('user'));
+  const urlUserId = searchParams.get('userId'); // /portfolio?userId=123
+  const targetUserId = urlUserId || user?._id;
+  const isOwner = user && user._id === targetUserId;
 
-    const user = JSON.parse(localStorage.getItem('user'));
+  const navigate = useNavigate();
 
-    useEffect(() => {
-        if (!user || (!user.roles.includes('business-owner') && !user.roles.includes('artist'))) {
-            navigate('/');
-            return;
-        }
-        fetchMyPortfolios();
-    }, [navigate, user]);
-
-    const fetchMyPortfolios = async () => {
-        try {
-            const response = await fetch('http://localhost:5000/api/portfolio/creator/my-portfolios', {
-                headers: {
-                    'Authorization': `Bearer ${user.token}`
-                }
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                setPortfolios(data);
-            }
-        } catch (error) {
-            console.error('Error:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-
-        const url = editingPortfolio
-            ? `http://localhost:5000/api/portfolio/${editingPortfolio._id}`
-            : 'http://localhost:5000/api/portfolio';
-
-        const method = editingPortfolio ? 'PUT' : 'POST';
-
-        try {
-            const response = await fetch(url, {
-                method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${user.token}`
-                },
-                body: JSON.stringify({
-                    ...formData,
-                    priceRange: {
-                        min: parseFloat(formData.priceRange.min) || 0,
-                        max: parseFloat(formData.priceRange.max) || 0
-                    }
-                })
-            });
-
-            if (response.ok) {
-                alert(editingPortfolio ? 'Portfolio updated!' : 'Portfolio created!');
-                setShowForm(false);
-                setEditingPortfolio(null);
-                setFormData({
-                    title: '',
-                    description: '',
-                    mediaType: 'image',
-                    mediaUrl: '',
-                    thumbnailUrl: '',
-                    category: 'painting',
-                    tags: '',
-                    skills: '',
-                    acceptsCustomOrders: false,
-                    priceRange: { min: '', max: '' }
-                });
-                fetchMyPortfolios();
-            } else {
-                const data = await response.json();
-                alert(data.message || 'Error saving portfolio');
-            }
-        } catch (error) {
-            alert('Error saving portfolio');
-        }
-    };
-
-    const handleEdit = (portfolio) => {
-        setEditingPortfolio(portfolio);
-        setFormData({
-            title: portfolio.title,
-            description: portfolio.description,
-            mediaType: portfolio.mediaType,
-            mediaUrl: portfolio.mediaUrl,
-            thumbnailUrl: portfolio.thumbnailUrl || portfolio.mediaUrl,
-            category: portfolio.category,
-            tags: portfolio.tags.join(', '),
-            skills: portfolio.skills.join(', '),
-            acceptsCustomOrders: portfolio.acceptsCustomOrders,
-            priceRange: {
-                min: portfolio.priceRange?.min || '',
-                max: portfolio.priceRange?.max || ''
-            }
-        });
-        setShowForm(true);
-    };
-
-    const handleDelete = async (portfolioId, portfolioTitle) => {
-        if (!window.confirm(`Delete ${portfolioTitle}?`)) return;
-
-        try {
-            const response = await fetch(`http://localhost:5000/api/portfolio/${portfolioId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${user.token}`
-                }
-            });
-
-            if (response.ok) {
-                alert('Portfolio deleted!');
-                fetchMyPortfolios();
-            }
-        } catch (error) {
-            alert('Error deleting portfolio');
-        }
-    };
-
-    const handleCancel = () => {
-        setShowForm(false);
-        setEditingPortfolio(null);
-        setFormData({
-            title: '',
-            description: '',
-            mediaType: 'image',
-            mediaUrl: '',
-            thumbnailUrl: '',
-            category: 'painting',
-            tags: '',
-            skills: '',
-            acceptsCustomOrders: false,
-            priceRange: { min: '', max: '' }
-        });
-    };
-
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-light flex items-center justify-center">
-                <p className="text-xl">Loading...</p>
-            </div>
-        );
+  useEffect(() => {
+    if (!targetUserId) {
+        navigate('/login');
+        return;
     }
+    fetchPortfolio();
+  }, [targetUserId]);
 
-    return (
-        <div className="min-h-screen bg-light">
-            <div className="bg-gradient-to-r from-purple-600 to-indigo-800 text-white py-12">
-                <div className="container mx-auto px-4">
-                    <h1 className="text-4xl font-bold mb-2">🎨 Portfolio Management</h1>
-                    <p className="text-lg opacity-90">Showcase your work and attract custom orders</p>
-                </div>
-            </div>
+  const fetchPortfolio = async () => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/portfolios/${targetUserId}`);
+      const data = await res.json();
+      setPortfolio(data);
+      setLoading(false);
+    } catch (error) {
+      console.error(error);
+      setLoading(false);
+    }
+  };
 
-            <div className="container mx-auto px-4 py-8">
-                <div className="bg-white rounded-lg shadow-lg mb-8">
-                    <div className="grid grid-cols-2 border-b">
-                        <button
-                            onClick={() => setActiveTab('my-portfolio')}
-                            className={`py-4 px-6 font-bold text-lg transition ${activeTab === 'my-portfolio'
-                                    ? 'bg-purple-600 text-white'
-                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                }`}
-                        >
-                            🖼️ My Portfolio ({portfolios.length})
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('discover')}
-                            className={`py-4 px-6 font-bold text-lg transition ${activeTab === 'discover'
-                                    ? 'bg-purple-600 text-white'
-                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                }`}
-                        >
-                            🔍 Discover Creators
-                        </button>
-                    </div>
+  if (loading) return <div className="flex h-screen items-center justify-center">Loading Showcase...</div>;
 
-                    {activeTab === 'my-portfolio' && (
-                        <div className="p-6">
-                            <div className="mb-6 flex justify-between items-center">
-                                <h2 className="text-2xl font-bold text-dark">My Portfolio Items</h2>
-                                <button
-                                    onClick={() => setShowForm(true)}
-                                    className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition font-bold"
-                                >
-                                    + Add Portfolio Item
-                                </button>
-                            </div>
+  return (
+    <div className="bg-white min-h-screen font-sans text-gray-800">
+      {/* --- HERO SECTION --- */}
+      <div className="relative h-96 bg-gray-900 text-white">
+        <div className="absolute inset-0 opacity-40 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+        <div className="container mx-auto px-6 h-full flex flex-col justify-center items-center text-center relative z-10">
+          
+          <img 
+            src={portfolio?.userId?.profile?.profilePicture || "https://via.placeholder.com/150"} 
+            className="w-32 h-32 rounded-full border-4 border-yellow-500 shadow-xl mb-4 object-cover"
+          />
+          
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-2">
+            {portfolio?.userId?.name}'s Portfolio
+          </h1>
+          <p className="text-xl text-gray-300 max-w-2xl font-light">
+            {portfolio?.bio || "A collection of my finest work and creative journey."}
+          </p>
 
-                            {showForm && (
-                                <div className="bg-gray-50 p-6 rounded-lg mb-8">
-                                    <h2 className="text-2xl font-bold mb-4">
-                                        {editingPortfolio ? 'Edit Portfolio Item' : 'Add New Portfolio Item'}
-                                    </h2>
+          <div className="mt-6 flex gap-4">
+            {portfolio?.experienceYears > 0 && (
+                <span className="bg-yellow-500 text-black px-4 py-1 rounded-full font-bold text-sm">
+                    {portfolio.experienceYears}+ Years Exp.
+                </span>
+            )}
+            {portfolio?.skills?.map((skill, i) => (
+                <span key={i} className="bg-gray-700 px-3 py-1 rounded-full text-sm border border-gray-600">
+                    {skill}
+                </span>
+            ))}
+          </div>
 
-                                    <form onSubmit={handleSubmit} className="space-y-4">
-                                        <div className="grid md:grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="block text-dark font-medium mb-1">Title *</label>
-                                                <input
-                                                    type="text"
-                                                    value={formData.title}
-                                                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                                    className="w-full p-2 border rounded focus:outline-none focus:border-purple-500"
-                                                    required
-                                                />
-                                            </div>
+          {/* Action Buttons for Owner */}
+          {isOwner && (
+            <button className="mt-6 bg-white text-gray-900 px-6 py-2 rounded-lg font-bold hover:bg-gray-100 transition">
+              ✏️ Edit Portfolio
+            </button>
+          )}
+        </div>
+      </div>
 
-                                            <div>
-                                                <label className="block text-dark font-medium mb-1">Category *</label>
-                                                <select
-                                                    value={formData.category}
-                                                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                                                    className="w-full p-2 border rounded focus:outline-none focus:border-purple-500 bg-white"
-                                                    required
-                                                >
-                                                    <option value="painting">Painting</option>
-                                                    <option value="music">Music</option>
-                                                    <option value="dance">Dance</option>
-                                                    <option value="craft">Craft</option>
-                                                    <option value="textile">Textile</option>
-                                                    <option value="agriculture">Agriculture</option>
-                                                    <option value="food">Food</option>
-                                                    <option value="design">Design</option>
-                                                    <option value="other">Other</option>
-                                                </select>
-                                            </div>
+      {/* --- CONTENT TABS --- */}
+      <div className="sticky top-0 bg-white shadow-sm z-20">
+        <div className="container mx-auto flex justify-center gap-8 py-4">
+            <button 
+                onClick={() => setActiveTab('projects')}
+                className={`text-lg font-bold pb-2 border-b-4 transition ${activeTab === 'projects' ? 'border-yellow-500 text-black' : 'border-transparent text-gray-500'}`}
+            >
+                🎨 Project Gallery
+            </button>
+            <button 
+                onClick={() => setActiveTab('awards')}
+                className={`text-lg font-bold pb-2 border-b-4 transition ${activeTab === 'awards' ? 'border-yellow-500 text-black' : 'border-transparent text-gray-500'}`}
+            >
+                🏆 Awards & Recognition
+            </button>
+            <button 
+                onClick={() => setActiveTab('videos')}
+                className={`text-lg font-bold pb-2 border-b-4 transition ${activeTab === 'videos' ? 'border-yellow-500 text-black' : 'border-transparent text-gray-500'}`}
+            >
+                🎥 Behind the Scenes
+            </button>
+        </div>
+      </div>
 
-                                            <div>
-                                                <label className="block text-dark font-medium mb-1">Media Type *</label>
-                                                <select
-                                                    value={formData.mediaType}
-                                                    onChange={(e) => setFormData({ ...formData, mediaType: e.target.value })}
-                                                    className="w-full p-2 border rounded focus:outline-none focus:border-purple-500 bg-white"
-                                                    required
-                                                >
-                                                    <option value="image">Image</option>
-                                                    <option value="video">Video</option>
-                                                    <option value="document">Document</option>
-                                                </select>
-                                            </div>
-
-                                            <div>
-                                                <label className="block text-dark font-medium mb-1">Accepts Custom Orders</label>
-                                                <label className="flex items-center">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={formData.acceptsCustomOrders}
-                                                        onChange={(e) => setFormData({ ...formData, acceptsCustomOrders: e.target.checked })}
-                                                        className="mr-2"
-                                                    />
-                                                    Yes, I accept custom orders
-                                                </label>
-                                            </div>
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-dark font-medium mb-1">Media URL *</label>
-                                            <input
-                                                type="url"
-                                                value={formData.mediaUrl}
-                                                onChange={(e) => setFormData({ ...formData, mediaUrl: e.target.value })}
-                                                className="w-full p-2 border rounded focus:outline-none focus:border-purple-500"
-                                                placeholder="https://example.com/image.jpg"
-                                                required
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-dark font-medium mb-1">Thumbnail URL (optional)</label>
-                                            <input
-                                                type="url"
-                                                value={formData.thumbnailUrl}
-                                                onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
-                                                className="w-full p-2 border rounded focus:outline-none focus:border-purple-500"
-                                                placeholder="https://example.com/thumbnail.jpg"
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-dark font-medium mb-1">Description *</label>
-                                            <textarea
-                                                value={formData.description}
-                                                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                                className="w-full p-2 border rounded focus:outline-none focus:border-purple-500"
-                                                rows="3"
-                                                required
-                                            />
-                                        </div>
-
-                                        <div className="grid md:grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="block text-dark font-medium mb-1">Tags (comma separated)</label>
-                                                <input
-                                                    type="text"
-                                                    value={formData.tags}
-                                                    onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
-                                                    className="w-full p-2 border rounded focus:outline-none focus:border-purple-500"
-                                                    placeholder="handmade, traditional, organic"
-                                                />
-                                            </div>
-
-                                            <div>
-                                                <label className="block text-dark font-medium mb-1">Skills (comma separated)</label>
-                                                <input
-                                                    type="text"
-                                                    value={formData.skills}
-                                                    onChange={(e) => setFormData({ ...formData, skills: e.target.value })}
-                                                    className="w-full p-2 border rounded focus:outline-none focus:border-purple-500"
-                                                    placeholder="pottery, painting, weaving"
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div className="grid md:grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="block text-dark font-medium mb-1">Min Price (৳)</label>
-                                                <input
-                                                    type="number"
-                                                    value={formData.priceRange.min}
-                                                    onChange={(e) => setFormData({
-                                                        ...formData,
-                                                        priceRange: { ...formData.priceRange, min: e.target.value }
-                                                    })}
-                                                    className="w-full p-2 border rounded focus:outline-none focus:border-purple-500"
-                                                    min="0"
-                                                />
-                                            </div>
-
-                                            <div>
-                                                <label className="block text-dark font-medium mb-1">Max Price (৳)</label>
-                                                <input
-                                                    type="number"
-                                                    value={formData.priceRange.max}
-                                                    onChange={(e) => setFormData({
-                                                        ...formData,
-                                                        priceRange: { ...formData.priceRange, max: e.target.value }
-                                                    })}
-                                                    className="w-full p-2 border rounded focus:outline-none focus:border-purple-500"
-                                                    min="0"
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div className="flex gap-4">
-                                            <button
-                                                type="submit"
-                                                className="bg-purple-600 text-white px-6 py-2 rounded hover:bg-purple-700 transition font-bold"
-                                            >
-                                                {editingPortfolio ? 'Update' : 'Create'}
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={handleCancel}
-                                                className="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600 transition"
-                                            >
-                                                Cancel
-                                            </button>
-                                        </div>
-                                    </form>
-                                </div>
-                            )}
-
-                            {portfolios.length === 0 ? (
-                                <div className="text-center py-12">
-                                    <p className="text-gray-600 text-lg mb-4">No portfolio items yet</p>
-                                    <button
-                                        onClick={() => setShowForm(true)}
-                                        className="bg-purple-600 text-white px-6 py-2 rounded hover:bg-purple-700 transition font-bold"
-                                    >
-                                        Add Your First Portfolio Item
-                                    </button>
-                                </div>
-                            ) : (
-                                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {portfolios.map(portfolio => (
-                                        <div key={portfolio._id} className="bg-white border rounded-lg overflow-hidden shadow hover:shadow-lg transition">
-                                            <div className="relative">
-                                                {portfolio.mediaType === 'image' ? (
-                                                    <img
-                                                        src={portfolio.thumbnailUrl || portfolio.mediaUrl}
-                                                        alt={portfolio.title}
-                                                        className="w-full h-48 object-cover"
-                                                    />
-                                                ) : portfolio.mediaType === 'video' ? (
-                                                    <div className="w-full h-48 bg-gray-200 flex items-center justify-center">
-                                                        <span className="text-4xl">▶️</span>
-                                                    </div>
-                                                ) : (
-                                                    <div className="w-full h-48 bg-gray-200 flex items-center justify-center">
-                                                        <span className="text-4xl">📄</span>
-                                                    </div>
-                                                )}
-                                                {portfolio.acceptsCustomOrders && (
-                                                    <span className="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded text-xs font-bold">
-                                                        Custom Orders Available
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <div className="p-4">
-                                                <h3 className="font-bold text-lg mb-2">{portfolio.title}</h3>
-                                                <p className="text-gray-600 text-sm mb-3 line-clamp-2">{portfolio.description}</p>
-
-                                                <div className="flex flex-wrap gap-2 mb-3">
-                                                    {portfolio.tags.slice(0, 3).map(tag => (
-                                                        <span key={tag} className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs">
-                                                            {tag}
-                                                        </span>
-                                                    ))}
-                                                </div>
-
-                                                <div className="flex justify-between items-center mb-3">
-                                                    <span className="text-sm text-gray-600">{portfolio.category}</span>
-                                                    <div className="text-sm">
-                                                        <span className="text-gray-600">👁️ {portfolio.viewCount}</span>
-                                                        <span className="ml-2 text-gray-600">❤️ {portfolio.favoriteCount}</span>
-                                                    </div>
-                                                </div>
-
-                                                <div className="flex gap-2">
-                                                    <button
-                                                        onClick={() => handleEdit(portfolio)}
-                                                        className="flex-1 bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition font-bold"
-                                                    >
-                                                        Edit
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDelete(portfolio._id, portfolio.title)}
-                                                        className="flex-1 bg-red-500 text-white py-2 rounded hover:bg-red-600 transition"
-                                                    >
-                                                        Delete
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    {activeTab === 'discover' && (
-                        <div className="p-6">
-                            <h2 className="text-2xl font-bold mb-6">Discover Creators</h2>
-                            <div className="mb-6">
-                                <input
-                                    type="text"
-                                    placeholder="Search portfolios by title, skill, or tag..."
-                                    className="w-full p-3 border rounded-lg focus:outline-none focus:border-purple-500"
+      {/* --- MAIN DISPLAY --- */}
+      <div className="container mx-auto px-6 py-12">
+        
+        {/* PROJECTS GRID */}
+        {activeTab === 'projects' && (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {portfolio?.projects?.length > 0 ? (
+                    portfolio.projects.map((project) => (
+                        <div key={project._id} className="group relative overflow-hidden rounded-xl shadow-lg bg-gray-50">
+                            <div className="h-64 overflow-hidden">
+                                <img 
+                                    src={project.imageUrl} 
+                                    alt={project.title} 
+                                    className="w-full h-full object-cover transform group-hover:scale-110 transition duration-500"
                                 />
                             </div>
-                            <p className="text-center text-gray-600 py-8">
-                                Browse portfolios of other creators to get inspired
-                            </p>
+                            <div className="p-6">
+                                <h3 className="text-xl font-bold mb-2">{project.title}</h3>
+                                <p className="text-gray-600 text-sm line-clamp-3 mb-4">{project.description}</p>
+                                <div className="flex flex-wrap gap-2">
+                                    {project.tags?.map(tag => (
+                                        <span key={tag} className="text-xs bg-gray-200 px-2 py-1 rounded text-gray-700">#{tag}</span>
+                                    ))}
+                                </div>
+                            </div>
+                            {/* Overlay on Hover */}
+                            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition duration-300 pointer-events-none"></div>
                         </div>
-                    )}
-                </div>
+                    ))
+                ) : (
+                    <div className="col-span-full text-center py-20 text-gray-500">
+                        <p className="text-xl">No projects showcased yet.</p>
+                        {isOwner && <p className="mt-2">Click "Edit Portfolio" to add your first masterpiece!</p>}
+                    </div>
+                )}
+            </div>
+        )}
+
+        {/* AWARDS SECTION */}
+        {activeTab === 'awards' && (
+            <div className="max-w-3xl mx-auto space-y-6">
+                {portfolio?.awards?.map((award, i) => (
+                    <div key={i} className="flex items-center gap-6 bg-white p-6 rounded-lg shadow border border-gray-100">
+                        <div className="bg-yellow-100 text-yellow-600 w-16 h-16 rounded-full flex items-center justify-center text-3xl">
+                            🏆
+                        </div>
+                        <div>
+                            <h3 className="text-xl font-bold">{award.title}</h3>
+                            <p className="text-gray-600">{award.issuer} • {award.year}</p>
+                        </div>
+                    </div>
+                ))}
+                {(!portfolio?.awards || portfolio.awards.length === 0) && (
+                    <p className="text-center text-gray-500 py-10">No awards listed yet.</p>
+                )}
+            </div>
+        )}
+      </div>
+      
+      {/* Call to Action for Visitors */}
+      {!isOwner && (
+        <div className="bg-yellow-50 py-12 text-center mt-12">
+            <h2 className="text-2xl font-bold mb-4">Impressed by {portfolio?.userId?.name}?</h2>
+            <div className="flex justify-center gap-4">
+                <button 
+                    onClick={() => navigate(`/profile/${portfolio?.userId?._id}`)}
+                    className="bg-white border border-gray-300 text-gray-800 px-8 py-3 rounded-lg font-bold hover:bg-gray-50"
+                >
+                    View Profile & Products
+                </button>
+                <button 
+                    onClick={() => navigate(`/create-custom-order?sellerId=${portfolio?.userId?._id}`)}
+                    className="bg-black text-white px-8 py-3 rounded-lg font-bold hover:bg-gray-800 shadow-lg"
+                >
+                    Request Custom Project
+                </button>
             </div>
         </div>
-    );
-}
+      )}
+    </div>
+  );
+};
 
 export default PortfolioPage;
