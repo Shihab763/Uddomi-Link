@@ -21,7 +21,7 @@ const notificationSchema = mongoose.Schema({
     },
     type: {
         type: String,
-        enum: ['info', 'warning', 'success', 'error', 'booking_request', 'booking_update', 'loan_update'], 
+        enum: ['info', 'warning', 'success', 'error', 'booking_request', 'booking_update', 'loan_update', 'custom_order_request', 'custom_order_update'], 
         default: 'info'
     },
     link: {
@@ -41,3 +41,4 @@ if (mongoose.models.Notification) {
 }
 
 module.exports = mongoose.model('Notification', notificationSchema);
+
