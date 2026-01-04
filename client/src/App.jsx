@@ -27,9 +27,8 @@ import AdvancedSearchPage from './pages/AdvancedSearchPage';
 import CustomOrdersPage from './pages/CustomOrdersPage';
 import WishlistPage from './pages/WishlistPage';
 import AnalyticsPage from './pages/AnalyticsPage';
-import CustomOrderRequests from './pages/CustomOrderRequests';
 import CreateCustomOrder from './pages/CreateCustomOrder';
-import MicrofinanceDashboard from './pages/MicrofinanceDashboard'; 
+import MicrofinanceDashboard from './pages/MicrofinanceDashboard';
 import SuccessStories from './pages/SuccessStories';
 import Forum from './pages/Forum';
 
@@ -40,6 +39,7 @@ function App() {
       <div className="font-sans text-dark">
         <Navbar />
         <Routes>
+          {/* Public & General Routes */}
           <Route path="/" element={<Dashboard />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
@@ -52,13 +52,25 @@ function App() {
           <Route path="/profile/:userId" element={<UserProfile />} />
           <Route path="/profile/edit" element={<EditProfile />} />
           <Route path="/portfolio" element={<PortfolioPage />} />
-          <Route path="/my-bookings" element={<MyBookings />} />
-          <Route path="/booking-requests" element={<BookingRequests />} />
-          <Route path="/dashboard" element={<TransactionDashboard />} />
-          <Route path="/microfinance" element={<MicrofinanceDashboard />} />
           <Route path="/stories" element={<SuccessStories />} />
           <Route path="/forum" element={<Forum />} />
+          <Route path="/wishlist" element={<WishlistPage />} />
+          <Route path="/search" element={<AdvancedSearchPage />} />
 
+          {/* Booking Routes */}
+          <Route path="/my-bookings" element={<MyBookings />} />
+          <Route path="/booking-requests" element={<BookingRequests />} />
+
+          {/* Custom Order Routes (Consolidated) */}
+          <Route path="/create-custom-order" element={<CreateCustomOrder />} />
+          <Route path="/custom-orders" element={<CustomOrdersPage />} />
+
+          {/* Financials */}
+          <Route path="/dashboard" element={<TransactionDashboard />} />
+          <Route path="/microfinance" element={<MicrofinanceDashboard />} />
+          <Route path="/analytics" element={<AnalyticsPage />} />
+
+          {/* Protected Role-Based Routes */}
           <Route
             path="/skill-hub"
             element={
@@ -113,12 +125,6 @@ function App() {
             }
           />
 
-          <Route path="/custom-orders" element={<CustomOrdersPage />} />
-          <Route path="/custom-order-requests" element={<CustomOrderRequests />} />
-          <Route path="/create-custom-order" element={<CreateCustomOrder />} />
-          <Route path="/wishlist" element={<WishlistPage />} />
-          <Route path="/search" element={<AdvancedSearchPage />} />
-          <Route path="/analytics" element={<AnalyticsPage />} />
           <Route
             path="/admin"
             element={
