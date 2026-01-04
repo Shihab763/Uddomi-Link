@@ -1,38 +1,38 @@
 const mongoose = require('mongoose');
 
-const customOrderSchema = new mongoose.Schema(
-  {
-    requester: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: true,
+const customOrderSchema = mongoose.Schema({
+    buyerId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
     },
-    creator: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: true,
+    sellerId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
     },
-    portfolio: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Portfolio',
+    title: {
+        type: String,
+        required: true
     },
-    details: {
-      type: String,
-      required: true,
+    description: {
+        type: String,
+        required: true
     },
     budget: {
-      type: Number,
+        type: Number,
+        required: true
     },
     deadline: {
-      type: Date,
+        type: Date
     },
     status: {
-      type: String,
-      enum: ['pending', 'accepted', 'rejected', 'completed'],
-      default: 'pending',
-    },
-  },
-  { timestamps: true }
-);
+        type: String,
+        enum: ['pending', 'accepted', 'rejected', 'completed'],
+        default: 'pending'
+    }
+}, {
+    timestamps: true
+});
 
 module.exports = mongoose.model('CustomOrder', customOrderSchema);
