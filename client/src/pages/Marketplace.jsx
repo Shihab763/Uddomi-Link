@@ -74,6 +74,43 @@ function Marketplace() {
         alert(`${product.name} added to cart!`);
     };
 
+
+    const addToWishlist = async (product) => {
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user) {
+            alert('Please login to use Wishlist');
+            return;
+        }
+
+        if (user.roles.includes('business-owner') || user.roles.includes('admin')) {
+            alert('Wishlist is only for Customers and NGOs');
+            return;
+        }
+
+        try {
+            const res = await fetch('http://localhost:5000/api/wishlist/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${user.token}`
+                },
+                body: JSON.stringify({
+                    productId: product._id,
+                    quantity: 1 
+                })
+            });
+
+            if (res.ok) {
+                alert('❤️ Added to Wishlist!');
+            } else {
+                const data = await res.json();
+                alert(data.message || 'Could not add to wishlist');
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
     if (loading) {
         return (
             <div className="min-h-screen bg-light flex items-center justify-center">
@@ -121,7 +158,7 @@ function Marketplace() {
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
                         {filteredProducts.map(product => (
-                            <div key={product._id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition">
+                            <div key={product._id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition flex flex-col">
                                 <Link to={`/marketplace/${product._id}`}>
                                     <img
                                         src={product.imageUrl}
@@ -130,7 +167,7 @@ function Marketplace() {
                                     />
                                 </Link>
 
-                                <div className="p-4">
+                                <div className="p-4 flex flex-col flex-1">
                                     <Link to={`/marketplace/${product._id}`}>
                                         <h3 className="font-bold text-lg mb-2 hover:text-primary">{product.name}</h3>
                                     </Link>
@@ -142,20 +179,31 @@ function Marketplace() {
                                         </div>
                                     )}
 
-                                    <p className="text-gray-600 text-sm mb-3 line-clamp-2">{product.description}</p>
+                                    <p className="text-gray-600 text-sm mb-3 line-clamp-2 flex-grow">{product.description}</p>
 
                                     <div className="flex justify-between items-center mb-3">
                                         <span className="text-2xl font-bold text-primary">৳{product.price}</span>
                                         <span className="text-sm text-gray-500">Stock: {product.stock}</span>
                                     </div>
 
-                                    <button
-                                        onClick={() => addToCart(product)}
-                                        disabled={product.stock === 0}
-                                        className="w-full bg-secondary text-dark font-bold py-2 rounded hover:bg-yellow-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        {product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
-                                    </button>
+                                    {/* */}
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => addToCart(product)}
+                                            disabled={product.stock === 0}
+                                            className="flex-1 bg-secondary text-dark font-bold py-2 rounded hover:bg-yellow-500 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                                        >
+                                            {product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
+                                        </button>
+                                        
+                                        <button
+                                            onClick={() => addToWishlist(product)}
+                                            className="bg-gray-100 text-red-500 px-3 py-2 rounded hover:bg-gray-200 transition text-xl border border-gray-200"
+                                            title="Add to Wishlist"
+                                        >
+                                            ❤️
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         ))}
