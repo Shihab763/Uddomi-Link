@@ -63,7 +63,7 @@ function Navbar() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="🔍 Search products, creators, skills..."
+              placeholder=" Search products, creators, skills..."
               className="w-full p-3 pl-10 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary bg-white text-dark"
             />
             <button 
