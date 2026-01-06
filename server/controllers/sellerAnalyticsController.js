@@ -5,19 +5,18 @@ const getSellerAnalytics = async (req, res) => {
     try {
         const sellerId = req.user._id;
 
+        // Get all seller's products
         const sellerProducts = await Product.find({ seller: sellerId });
         const productIds = sellerProducts.map(p => p._id.toString());
 
-
-        const mostViewed = [...sellerProducts].sort((a, b) => (b.views || 0) - (a.views || 0))[0] || null;
-
-     
+        // Get all orders containing seller's products
         const allOrders = await Order.find({}).populate('items.product');
 
+        // Filter orders that contain seller's products
         let sellerRevenue = 0;
         let sellerOrderCount = 0;
         let totalProductsSold = 0;
-        const productSales = {}; 
+        const productSales = {};
         const orderSet = new Set();
 
         allOrders.forEach(order => {
@@ -29,23 +28,20 @@ const getSellerAnalytics = async (req, res) => {
                 if (productIds.includes(productId)) {
                     hasSellerProduct = true;
 
-                    // Track Revenue
-                    const itemRevenue = item.price * item.quantity;
-                    sellerRevenue += itemRevenue;
+                    // Track revenue for this seller
+                    sellerRevenue += item.price * item.quantity;
                     totalProductsSold += item.quantity;
 
-                    // Track Individual Product Sales
+                    // Track product sales
                     if (!productSales[productId]) {
                         productSales[productId] = {
-                            name: item.product?.name || 'Unknown',
+                            product: item.product,
                             totalQuantity: 0,
-                            totalRevenue: 0,
-                            imageUrl: item.product?.imageUrl,
-                            stock: item.product?.stock || 0
+                            totalRevenue: 0
                         };
                     }
                     productSales[productId].totalQuantity += item.quantity;
-                    productSales[productId].totalRevenue += itemRevenue;
+                    productSales[productId].totalRevenue += item.price * item.quantity;
                 }
             });
 
@@ -56,18 +52,24 @@ const getSellerAnalytics = async (req, res) => {
 
         sellerOrderCount = orderSet.size;
 
+        // Get top 5 products
+        const topProducts = Object.values(productSales)
+            .sort((a, b) => b.totalQuantity - a.totalQuantity)
+            .slice(0, 5)
+            .map(p => ({
+                name: p.product?.name || 'Unknown',
+                quantity: p.totalQuantity,
+                revenue: p.totalRevenue,
+                stock: p.product?.stock || 0
+            }));
 
-        const productSalesArray = Object.values(productSales);
-
-    
-        const topSellingProduct = productSalesArray.sort((a, b) => b.totalQuantity - a.totalQuantity)[0] || null;
-        
-       
-        const highestRevenueProduct = [...productSalesArray].sort((a, b) => b.totalRevenue - a.totalRevenue)[0] || null;
-
-      
+        // Get recent orders
         const recentOrders = allOrders
-            .filter(order => order.items.some(item => productIds.includes(item.product?._id?.toString())))
+            .filter(order => {
+                return order.items.some(item =>
+                    productIds.includes(item.product?._id?.toString())
+                );
+            })
             .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
             .slice(0, 5)
             .map(o => ({
@@ -75,38 +77,45 @@ const getSellerAnalytics = async (req, res) => {
                 buyer: o.buyer?.name || 'Unknown',
                 totalAmount: o.totalAmount,
                 status: o.status,
-                createdAt: o.createdAt
+                createdAt: o.createdAt,
+                items: o.items.filter(item =>
+                    productIds.includes(item.product?._id?.toString())
+                ).map(item => ({
+                    name: item.product?.name,
+                    quantity: item.quantity,
+                    price: item.price
+                }))
             }));
 
+        // Get pending products count
+        const pendingProducts = sellerProducts.filter(p => !p.isApproved).length;
+        const approvedProducts = sellerProducts.filter(p => p.isApproved).length;
+
+        // Low stock products (stock < 5)
         const lowStock = sellerProducts.filter(p => p.stock < 5 && p.stock > 0);
 
-  
         res.json({
             overview: {
                 totalRevenue: sellerRevenue,
                 totalOrders: sellerOrderCount,
                 totalProductsSold,
                 totalProducts: sellerProducts.length,
-                totalViews: sellerProducts.reduce((acc, curr) => acc + (curr.views || 0), 0)
+                approvedProducts,
+                pendingProducts
             },
-            highlights: {
-                mostViewed: mostViewed ? {
-                    name: mostViewed.name,
-                    views: mostViewed.views,
-                    imageUrl: mostViewed.imageUrl
-                } : null,
-                bestSeller: topSellingProduct,
-                topEarner: highestRevenueProduct
-            },
-          
+            topProducts,
             recentOrders,
-            lowStockProducts: lowStock.map(p => ({ name: p.name, stock: p.stock, _id: p._id })),
-            allProductsStats: productSalesArray 
+            lowStockProducts: lowStock.map(p => ({
+                name: p.name,
+                stock: p.stock,
+                _id: p._id
+            }))
         });
-
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
 
-module.exports = { getSellerAnalytics };
+module.exports = {
+    getSellerAnalytics
+};
