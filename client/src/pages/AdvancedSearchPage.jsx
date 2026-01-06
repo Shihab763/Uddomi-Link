@@ -4,11 +4,9 @@ import { useLocation, Link, useNavigate } from 'react-router-dom';
 function AdvancedSearchPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const queryParams = new URLSearchParams(location.search);
-  const initialQ = queryParams.get('q') || '';
-
+  
   // --- STATE ---
-  const [searchTerm, setSearchTerm] = useState(initialQ);
+  const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('products'); // 'products' or 'creators'
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
@@ -16,6 +14,14 @@ function AdvancedSearchPage() {
   
   const [results, setResults] = useState({ products: [], creators: [] });
   const [loading, setLoading] = useState(false);
+
+  // --- FIX #3: SYNC SEARCH BAR WITH PAGE ---
+  // This ensures that if you search again from the Navbar, the page updates.
+  useEffect(() => {
+    const queryParams = new URLSearchParams(location.search);
+    const q = queryParams.get('q') || '';
+    setSearchTerm(q);
+  }, [location.search]);
 
   // --- FETCH DATA ---
   useEffect(() => {
@@ -41,7 +47,7 @@ function AdvancedSearchPage() {
       }
     };
 
-    // Debounce slightly to avoid too many calls if typing manually
+    // Debounce slightly to avoid too many calls if typing manually in the sidebar
     const timer = setTimeout(() => {
       fetchResults();
     }, 500);
@@ -50,14 +56,9 @@ function AdvancedSearchPage() {
   }, [searchTerm, filterType, minPrice, maxPrice, sortOrder]);
 
 
-  // --- ADD TO CART HANDLER ---
-  const addToCart = (productId) => {
-    // Basic redirection to Cart as requested, 
-    // ideally you'd call an API to add item first, then navigate.
-    // For now, we simulate the "Direct to Cart" flow.
-    // In a real app: await api.post('/cart', { productId });
-    console.log("Adding to cart:", productId);
-    navigate('/cart');
+  // --- FIX #1: IMAGE ERROR HANDLER ---
+  const handleImageError = (e) => {
+    e.target.src = "https://via.placeholder.com/300?text=No+Image"; // Fallback image
   };
 
   return (
@@ -151,7 +152,7 @@ function AdvancedSearchPage() {
           {/* --- RESULTS GRID --- */}
           <div className="w-full md:w-3/4">
             
-            {/* Search Input Repetition (Optional convenient search) */}
+            {/* Search Input Repetition */}
             <div className="mb-6">
               <input
                 type="text"
@@ -170,11 +171,12 @@ function AdvancedSearchPage() {
                 {/* PRODUCT RESULTS */}
                 {filterType === 'products' && results.products?.map((item) => (
                   <div key={item._id} className="bg-white rounded-lg shadow hover:shadow-lg transition overflow-hidden flex flex-col">
-                    {/* Image Area */}
+                    {/* Image Area with Error Handling */}
                     <div className="h-48 overflow-hidden bg-gray-100">
                       <img 
-                        src={item.image || 'https://via.placeholder.com/300'} 
+                        src={item.image || 'https://via.placeholder.com/300?text=No+Image'} 
                         alt={item.name} 
+                        onError={handleImageError} 
                         className="w-full h-full object-cover"
                       />
                     </div>
@@ -190,22 +192,14 @@ function AdvancedSearchPage() {
                         </span>
                       </div>
 
+                      {/* FIX #2: Removed Add to Cart Button */}
                       <div className="mt-4 flex gap-2">
-                        {/* View Details Button */}
                         <Link 
                           to={`/marketplace/${item._id}`}
                           className="flex-1 bg-gray-100 text-dark py-2 rounded text-center text-sm font-semibold hover:bg-gray-200"
                         >
                           View
                         </Link>
-                        {/* Direct Cart Action */}
-                        <button
-                          onClick={() => addToCart(item._id)}
-                          disabled={item.stock <= 0}
-                          className="flex-1 bg-primary text-white py-2 rounded text-center text-sm font-semibold hover:bg-green-700 disabled:opacity-50"
-                        >
-                          Add to Cart
-                        </button>
                       </div>
                     </div>
                   </div>
@@ -218,6 +212,7 @@ function AdvancedSearchPage() {
                       <img 
                         src={user.profile?.avatar || 'https://via.placeholder.com/150'} 
                         alt={user.name}
+                        onError={handleImageError}
                         className="w-full h-full object-cover"
                       />
                     </div>
