@@ -7,11 +7,11 @@ function Navbar() {
   const user = JSON.parse(localStorage.getItem('user'));
   const [wishlistCount, setWishlistCount] = useState(0);
 
-  // --- NEW: Search Suggestion State ---
+
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState({ products: [], creators: [] });
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const searchRef = useRef(null); // To detect clicks outside
+  const searchRef = useRef(null); 
 
   useEffect(() => {
     if (user) {
@@ -20,7 +20,7 @@ function Navbar() {
       setWishlistCount(0);
     }
 
-    // --- NEW: Close suggestions if clicking outside ---
+    
     const handleClickOutside = (event) => {
       if (searchRef.current && !searchRef.current.contains(event.target)) {
         setShowSuggestions(false);
@@ -48,7 +48,6 @@ function Navbar() {
     }
   };
 
-  // --- NEW: Live Suggestion Handler ---
   const handleInputChange = async (e) => {
     const query = e.target.value;
     setSearchQuery(query);
@@ -70,7 +69,7 @@ function Navbar() {
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      setShowSuggestions(false); // Close dropdown
+      setShowSuggestions(false);
       navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
@@ -88,7 +87,7 @@ function Navbar() {
           <span>🌾</span> Uddomi Link
         </Link>
 
-        {/* --- MODIFIED: Search Bar with Suggestions --- */}
+        {/* --- Search Bar with Suggestions --- */}
         <div className="w-full md:w-auto md:flex-grow md:max-w-xl md:ml-8 relative" ref={searchRef}>
           <form onSubmit={handleSearchSubmit} className="relative">
             <input
@@ -107,7 +106,7 @@ function Navbar() {
             </button>
           </form>
 
-          {/* --- NEW: Dropdown Suggestions UI (Matches Screenshot) --- */}
+          {/* --- Dropdown Suggestions UI --- */}
           {showSuggestions && (suggestions.products.length > 0 || suggestions.creators.length > 0) && (
             <div className="absolute top-full left-0 right-0 bg-white shadow-xl rounded-b-lg border border-gray-100 mt-1 z-50 max-h-96 overflow-y-auto">
               
@@ -119,7 +118,8 @@ function Navbar() {
                   onClick={() => setShowSuggestions(false)}
                   className="flex items-center gap-3 p-3 hover:bg-gray-50 transition border-b border-gray-100 last:border-0"
                 >
-                  <img src={prod.image || 'https://via.placeholder.com/50'} alt={prod.name} className="w-10 h-10 object-cover rounded" />
+                  {/* */}
+                  <img src={prod.imageUrl || 'https://via.placeholder.com/50'} alt={prod.name} className="w-10 h-10 object-cover rounded" />
                   <div>
                     <p className="text-sm font-semibold text-dark">{prod.name}</p>
                     <p className="text-xs text-primary font-bold">৳{prod.price}</p>
@@ -155,7 +155,7 @@ function Navbar() {
           )}
         </div>
 
-        {/* --- ORIGINAL: Navigation Links (Preserved) --- */}
+        {/* --- Navigation Links --- */}
         <div className="flex items-center flex-wrap justify-center gap-3 md:gap-4">
           <Link to="/marketplace" className="text-white hover:text-secondary transition font-medium text-sm md:text-base">
             🛍️ Marketplace
