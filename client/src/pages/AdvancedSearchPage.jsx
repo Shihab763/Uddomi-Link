@@ -4,8 +4,8 @@ import { useSearchParams, Link } from 'react-router-dom';
 const AdvancedSearchPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   
-  // FIX 1: Check for both 'keyword' AND 'q' (standard search param)
-  const initialKeyword = searchParams.get('keyword') || searchParams.get('q') || '';
+  // Initialize state from URL params (supports ?q= or ?keyword=)
+  const initialKeyword = searchParams.get('q') || searchParams.get('keyword') || '';
 
   const [filters, setFilters] = useState({
     keyword: initialKeyword,
@@ -18,22 +18,20 @@ const AdvancedSearchPage = () => {
 
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [hasSearched, setHasSearched] = useState(false); // To track if a search happened
 
-  // FIX 2: Sync URL changes (like from Navbar) to State immediately
+  // Sync state when URL changes (e.g. typing in Navbar)
   useEffect(() => {
-    const urlKeyword = searchParams.get('keyword') || searchParams.get('q') || '';
+    const urlKeyword = searchParams.get('q') || searchParams.get('keyword') || '';
     if (urlKeyword !== filters.keyword) {
       setFilters(prev => ({ ...prev, keyword: urlKeyword }));
     }
   }, [searchParams]);
 
-  // Debounce search execution
+  // Auto-search when filters change (with delay)
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchResults();
     }, 500); 
-
     return () => clearTimeout(timer);
   }, [filters]);
 
@@ -41,8 +39,10 @@ const AdvancedSearchPage = () => {
     setLoading(true);
     try {
       const query = new URLSearchParams();
-      // Send 'keyword' to backend regardless of source
-      if (filters.keyword) query.append('keyword', filters.keyword);
+      
+      // Use 'q' as the standard param name for the backend
+      if (filters.keyword) query.append('q', filters.keyword);
+      
       if (filters.category !== 'All') query.append('category', filters.category);
       if (filters.minPrice) query.append('minPrice', filters.minPrice);
       if (filters.maxPrice) query.append('maxPrice', filters.maxPrice);
@@ -55,12 +55,15 @@ const AdvancedSearchPage = () => {
 
       const data = await res.json();
 
+      // Robust check: Ensure data is an array
       if (Array.isArray(data)) {
         setProducts(data);
+      } else if (data.results && Array.isArray(data.results)) {
+        // Fallback if backend sends { results: [...] }
+        setProducts(data.results);
       } else {
         setProducts([]);
       }
-      setHasSearched(true);
 
     } catch (error) {
       console.error("Search failed:", error);
@@ -76,6 +79,7 @@ const AdvancedSearchPage = () => {
 
   return (
     <div className="min-h-screen bg-light">
+      {/* Banner */}
       <div className="bg-primary text-white py-8">
         <div className="container mx-auto px-4">
           <h1 className="text-3xl font-bold">🔍 Advanced Search</h1>
@@ -165,7 +169,7 @@ const AdvancedSearchPage = () => {
         {/* --- RESULTS GRID --- */}
         <div className="w-full md:w-3/4">
           <div className="flex justify-between items-center mb-6">
-            {/* FIX 3: Dynamic Header Text */}
+            {/* Dynamic Results Header */}
             <h2 className="text-xl font-bold text-dark">
               {loading 
                 ? "Searching..." 
