@@ -4,9 +4,11 @@ import { useSearchParams, Link } from 'react-router-dom';
 const AdvancedSearchPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   
+  // FIX 1: Check for both 'keyword' AND 'q' (standard search param)
+  const initialKeyword = searchParams.get('keyword') || searchParams.get('q') || '';
 
   const [filters, setFilters] = useState({
-    keyword: searchParams.get('keyword') || '',
+    keyword: initialKeyword,
     category: 'All',
     minPrice: '',
     maxPrice: '',
@@ -14,14 +16,14 @@ const AdvancedSearchPage = () => {
     rating: ''
   });
 
-
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false); // To track if a search happened
 
-
+  // FIX 2: Sync URL changes (like from Navbar) to State immediately
   useEffect(() => {
-    const urlKeyword = searchParams.get('keyword');
-    if (urlKeyword && urlKeyword !== filters.keyword) {
+    const urlKeyword = searchParams.get('keyword') || searchParams.get('q') || '';
+    if (urlKeyword !== filters.keyword) {
       setFilters(prev => ({ ...prev, keyword: urlKeyword }));
     }
   }, [searchParams]);
@@ -38,8 +40,8 @@ const AdvancedSearchPage = () => {
   const fetchResults = async () => {
     setLoading(true);
     try {
-      // Build Query String
       const query = new URLSearchParams();
+      // Send 'keyword' to backend regardless of source
       if (filters.keyword) query.append('keyword', filters.keyword);
       if (filters.category !== 'All') query.append('category', filters.category);
       if (filters.minPrice) query.append('minPrice', filters.minPrice);
@@ -49,18 +51,16 @@ const AdvancedSearchPage = () => {
 
       const res = await fetch(`http://localhost:5000/api/search?${query.toString()}`);
       
-      if (!res.ok) {
-        throw new Error('Search failed');
-      }
+      if (!res.ok) throw new Error('Search failed');
 
       const data = await res.json();
 
       if (Array.isArray(data)) {
         setProducts(data);
       } else {
-        console.error("API returned non-array data:", data);
-        setProducts([]); 
+        setProducts([]);
       }
+      setHasSearched(true);
 
     } catch (error) {
       console.error("Search failed:", error);
@@ -76,7 +76,6 @@ const AdvancedSearchPage = () => {
 
   return (
     <div className="min-h-screen bg-light">
-      {/* Header Banner */}
       <div className="bg-primary text-white py-8">
         <div className="container mx-auto px-4">
           <h1 className="text-3xl font-bold">🔍 Advanced Search</h1>
@@ -91,7 +90,6 @@ const AdvancedSearchPage = () => {
           <div className="bg-white p-5 rounded-lg shadow-lg">
             <h3 className="font-bold text-lg mb-4 text-dark border-b pb-2">Filters</h3>
             
-            {/* Keyword */}
             <div className="mb-4">
               <label className="block text-sm font-semibold mb-1">Search Term</label>
               <input 
@@ -104,7 +102,6 @@ const AdvancedSearchPage = () => {
               />
             </div>
 
-            {/* Category */}
             <div className="mb-4">
               <label className="block text-sm font-semibold mb-1">Category</label>
               <select 
@@ -122,7 +119,6 @@ const AdvancedSearchPage = () => {
               </select>
             </div>
 
-            {/* Price Range */}
             <div className="mb-4">
               <label className="block text-sm font-semibold mb-1">Price Range (BDT)</label>
               <div className="flex gap-2">
@@ -145,7 +141,6 @@ const AdvancedSearchPage = () => {
               </div>
             </div>
 
-            {/* Location (Seller) */}
             <div className="mb-4">
               <label className="block text-sm font-semibold mb-1">Seller Location</label>
               <input 
@@ -158,7 +153,6 @@ const AdvancedSearchPage = () => {
               />
             </div>
 
-            {/* Reset Button */}
             <button 
               onClick={() => setFilters({ keyword: '', category: 'All', minPrice: '', maxPrice: '', location: '', rating: '' })}
               className="w-full bg-gray-200 text-gray-700 py-2 rounded hover:bg-gray-300 transition"
@@ -171,8 +165,14 @@ const AdvancedSearchPage = () => {
         {/* --- RESULTS GRID --- */}
         <div className="w-full md:w-3/4">
           <div className="flex justify-between items-center mb-6">
+            {/* FIX 3: Dynamic Header Text */}
             <h2 className="text-xl font-bold text-dark">
-              {products.length} Result{products.length !== 1 && 's'} Found
+              {loading 
+                ? "Searching..." 
+                : filters.keyword 
+                  ? `${products.length} Result${products.length !== 1 ? 's' : ''} Found for "${filters.keyword}"`
+                  : `${products.length} Result${products.length !== 1 ? 's' : ''} Found`
+              }
             </h2>
           </div>
 
@@ -184,7 +184,7 @@ const AdvancedSearchPage = () => {
             <div className="text-center py-20 bg-white rounded-lg shadow">
               <p className="text-xl text-gray-500">No items match your filters.</p>
               <button 
-                onClick={() => setFilters({ ...filters, category: 'All', minPrice: '', maxPrice: '', location: '' })}
+                onClick={() => setFilters({ keyword: '', category: 'All', minPrice: '', maxPrice: '', location: '', rating: '' })}
                 className="mt-4 text-primary underline"
               >
                 Clear filters
