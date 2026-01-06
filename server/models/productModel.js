@@ -46,16 +46,10 @@ const productSchema = mongoose.Schema({
     rating: {
         average: { type: Number, default: 0 },
         count: { type: Number, default: 0 }
-    },
-    
-    views: {
-        type: Number,
-        default: 0
     }
 }, {
     timestamps: true
 });
-
 
 productSchema.post('save', async function(doc) {
     await updateProductSearchIndex(doc);
