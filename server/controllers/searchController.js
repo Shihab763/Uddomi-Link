@@ -1,62 +1,62 @@
 const Product = require('../models/productModel');
 const User = require('../models/userModel');
 
-// @desc    Advanced Search for Products
+// @desc    Advanced Search with Filters
 // @route   GET /api/search
-const searchProducts = async (req, res) => {
+const search = async (req, res) => {
   try {
-    const { keyword, category, minPrice, maxPrice, location, rating } = req.query;
+    // Standardize: accept 'q' (from Navbar) or 'keyword' (from Sidebar)
+    const keyword = req.query.q || req.query.keyword || '';
+    const { category, minPrice, maxPrice, location, rating } = req.query;
 
     console.log("🔍 SEARCH API HIT");
-    console.log("Params:", req.query);
+    console.log("Params:", { keyword, category, minPrice, maxPrice, location });
 
-    // 1. Build the Basic Query (Product Fields)
+    // 1. Build the Database Query
     let query = {};
 
-    // Keyword Search
+    // Search by Name or Description
     if (keyword) {
       query.$or = [
         { name: { $regex: keyword, $options: 'i' } },
-        { description: { $regex: keyword, $options: 'i' } },
-        // Fallback in case schema uses 'title' instead of 'name'
-        { title: { $regex: keyword, $options: 'i' } } 
+        { description: { $regex: keyword, $options: 'i' } }
       ];
     }
 
-    // Category Filter
+    // Filter by Category
     if (category && category !== 'All') {
       query.category = category;
     }
 
-    // Price Range Filter
+    // Filter by Price
     if (minPrice || maxPrice) {
       query.price = {};
       if (minPrice) query.price.$gte = Number(minPrice);
       if (maxPrice) query.price.$lte = Number(maxPrice);
     }
 
-    // 2. Fetch Products with Seller Data
+    // 2. Fetch Products
     let products = await Product.find(query).populate('sellerId', 'name email profile address rating');
 
-    // 3. Post-Fetch Filtering (For Seller Fields)
+    // 3. Post-Database Filtering (for Seller Location/Rating)
     if (location || rating) {
       products = products.filter(product => {
         const seller = product.sellerId;
-        if (!seller) return false; 
+        if (!seller) return false;
 
         let matchesLocation = true;
         let matchesRating = true;
 
         if (location) {
-          const city = seller.profile?.address?.city || '';
-          const district = seller.profile?.address?.district || '';
-          const sellerAddress = `${city} ${district}`.toLowerCase();
-          matchesLocation = sellerAddress.includes(location.toLowerCase());
+          // Check city or district
+          const address = seller.profile?.address || {};
+          const fullAddress = `${address.city || ''} ${address.district || ''} ${address.street || ''}`.toLowerCase();
+          matchesLocation = fullAddress.includes(location.toLowerCase());
         }
 
         if (rating) {
-            const sellerRating = seller.rating || 0; 
-            matchesRating = sellerRating >= Number(rating);
+          const sellerRating = seller.rating || 0;
+          matchesRating = sellerRating >= Number(rating);
         }
 
         return matchesLocation && matchesRating;
@@ -64,11 +64,14 @@ const searchProducts = async (req, res) => {
     }
 
     console.log(`✅ Found ${products.length} products`);
+    
+    // Return a simple array to make the Frontend's job easy
     res.json(products);
+
   } catch (error) {
     console.error("Search Error:", error);
-    res.status(500).json([]); // Return empty array on error
+    res.status(500).json([]); // Return empty array on error to prevent crash
   }
 };
 
-module.exports = { searchProducts };
+module.exports = { search };
