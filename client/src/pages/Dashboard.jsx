@@ -227,15 +227,6 @@ function Dashboard() {
           </Link>
 
           <Link
-            to="/wishlist"
-            className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition text-center border-t-4 border-pink-600"
-          >
-            <div className="text-4xl mb-3">❤️</div>
-            <h3 className="text-lg font-bold text-dark">Wishlist</h3>
-            <p className="text-sm text-gray-600 mt-2">Save favorites</p>
-          </Link>
-
-          <Link
             to="/search"
             className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition text-center border-t-4 border-teal-600"
           >
