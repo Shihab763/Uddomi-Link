@@ -4,30 +4,28 @@ import { useLocation, Link, useNavigate } from 'react-router-dom';
 function AdvancedSearchPage() {
   const location = useLocation();
   
-  // --- STATE ---
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState('products'); // 'products' or 'creators'
+  const [filterType, setFilterType] = useState('products'); 
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
-  const [sortOrder, setSortOrder] = useState('relevance'); // 'relevance', 'lowToHigh', 'highToLow'
+  const [sortOrder, setSortOrder] = useState('relevance'); 
   
   const [results, setResults] = useState({ products: [], creators: [] });
   const [loading, setLoading] = useState(false);
 
-  // --- SYNC SEARCH BAR WITH PAGE ---
-  // This ensures that if you search again from the Navbar, the page updates immediately.
+
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
     const q = queryParams.get('q') || '';
     setSearchTerm(q);
   }, [location.search]);
 
-  // --- FETCH DATA ---
+ 
   useEffect(() => {
     const fetchResults = async () => {
       setLoading(true);
       try {
-        // Build Query URL
+      
         let url = `http://localhost:5000/api/search?q=${encodeURIComponent(searchTerm)}&type=${filterType}`;
         
         if (filterType === 'products') {
@@ -46,7 +44,7 @@ function AdvancedSearchPage() {
       }
     };
 
-    // Debounce slightly to avoid too many calls if typing manually in the sidebar
+  
     const timer = setTimeout(() => {
       fetchResults();
     }, 500);
@@ -55,7 +53,7 @@ function AdvancedSearchPage() {
   }, [searchTerm, filterType, minPrice, maxPrice, sortOrder]);
 
 
-  // --- IMAGE ERROR HANDLER ---
+
   const handleImageError = (e) => {
     e.target.src = "https://via.placeholder.com/300?text=No+Image"; 
   };
@@ -148,10 +146,10 @@ function AdvancedSearchPage() {
             )}
           </div>
 
-          {/* --- RESULTS GRID --- */}
+          {/* result grid */}
           <div className="w-full md:w-3/4">
             
-            {/* Search Input Repetition */}
+            {/* Input Repetition handling */}
             <div className="mb-6">
               <input
                 type="text"
@@ -208,7 +206,7 @@ function AdvancedSearchPage() {
                 {filterType === 'creators' && results.creators?.map((user) => (
                   <div key={user._id} className="bg-white rounded-lg shadow hover:shadow-lg transition p-6 flex flex-col items-center text-center">
                     <div className="w-24 h-24 rounded-full bg-gray-200 overflow-hidden mb-4">
-                      {/* Note: Creator avatar usually resides in profile.avatar, adjust if your userModel differs */}
+                      {/*  */}
                       <img 
                         src={user.profile?.avatar || 'https://via.placeholder.com/150'} 
                         alt={user.name}
@@ -229,7 +227,7 @@ function AdvancedSearchPage() {
                   </div>
                 ))}
 
-                {/* NO RESULTS */}
+                {/* no result handling */}
                 {filterType === 'products' && results.products?.length === 0 && (
                   <div className="col-span-full text-center py-10 text-gray-500">
                     No products found matching your filters.
