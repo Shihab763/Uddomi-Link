@@ -3,7 +3,6 @@ import { useLocation, Link, useNavigate } from 'react-router-dom';
 
 function AdvancedSearchPage() {
   const location = useLocation();
-  const navigate = useNavigate();
   
   // --- STATE ---
   const [searchTerm, setSearchTerm] = useState('');
@@ -15,8 +14,8 @@ function AdvancedSearchPage() {
   const [results, setResults] = useState({ products: [], creators: [] });
   const [loading, setLoading] = useState(false);
 
-  // --- FIX #3: SYNC SEARCH BAR WITH PAGE ---
-  // This ensures that if you search again from the Navbar, the page updates.
+  // --- SYNC SEARCH BAR WITH PAGE ---
+  // This ensures that if you search again from the Navbar, the page updates immediately.
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
     const q = queryParams.get('q') || '';
@@ -56,9 +55,9 @@ function AdvancedSearchPage() {
   }, [searchTerm, filterType, minPrice, maxPrice, sortOrder]);
 
 
-  // --- FIX #1: IMAGE ERROR HANDLER ---
+  // --- IMAGE ERROR HANDLER ---
   const handleImageError = (e) => {
-    e.target.src = "https://via.placeholder.com/300?text=No+Image"; // Fallback image
+    e.target.src = "https://via.placeholder.com/300?text=No+Image"; 
   };
 
   return (
@@ -171,10 +170,10 @@ function AdvancedSearchPage() {
                 {/* PRODUCT RESULTS */}
                 {filterType === 'products' && results.products?.map((item) => (
                   <div key={item._id} className="bg-white rounded-lg shadow hover:shadow-lg transition overflow-hidden flex flex-col">
-                    {/* Image Area with Error Handling */}
+                    {/* Image Area */}
                     <div className="h-48 overflow-hidden bg-gray-100">
                       <img 
-                        src={item.image || 'https://via.placeholder.com/300?text=No+Image'} 
+                        src={item.imageUrl}  
                         alt={item.name} 
                         onError={handleImageError} 
                         className="w-full h-full object-cover"
@@ -192,7 +191,7 @@ function AdvancedSearchPage() {
                         </span>
                       </div>
 
-                      {/* FIX #2: Removed Add to Cart Button */}
+                      {/* View Details Button (No Add to Cart) */}
                       <div className="mt-4 flex gap-2">
                         <Link 
                           to={`/marketplace/${item._id}`}
@@ -209,6 +208,7 @@ function AdvancedSearchPage() {
                 {filterType === 'creators' && results.creators?.map((user) => (
                   <div key={user._id} className="bg-white rounded-lg shadow hover:shadow-lg transition p-6 flex flex-col items-center text-center">
                     <div className="w-24 h-24 rounded-full bg-gray-200 overflow-hidden mb-4">
+                      {/* Note: Creator avatar usually resides in profile.avatar, adjust if your userModel differs */}
                       <img 
                         src={user.profile?.avatar || 'https://via.placeholder.com/150'} 
                         alt={user.name}
