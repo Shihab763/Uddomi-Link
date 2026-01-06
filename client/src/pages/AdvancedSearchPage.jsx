@@ -4,6 +4,7 @@ import { useSearchParams, Link } from 'react-router-dom';
 const AdvancedSearchPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   
+
   const [filters, setFilters] = useState({
     keyword: searchParams.get('keyword') || '',
     category: 'All',
@@ -13,13 +14,23 @@ const AdvancedSearchPage = () => {
     rating: ''
   });
 
+
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
 
+
+  useEffect(() => {
+    const urlKeyword = searchParams.get('keyword');
+    if (urlKeyword && urlKeyword !== filters.keyword) {
+      setFilters(prev => ({ ...prev, keyword: urlKeyword }));
+    }
+  }, [searchParams]);
+
+  // Debounce search execution
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchResults();
-    }, 500);
+    }, 500); 
 
     return () => clearTimeout(timer);
   }, [filters]);
@@ -27,7 +38,7 @@ const AdvancedSearchPage = () => {
   const fetchResults = async () => {
     setLoading(true);
     try {
-
+      // Build Query String
       const query = new URLSearchParams();
       if (filters.keyword) query.append('keyword', filters.keyword);
       if (filters.category !== 'All') query.append('category', filters.category);
@@ -37,10 +48,23 @@ const AdvancedSearchPage = () => {
       if (filters.rating) query.append('rating', filters.rating);
 
       const res = await fetch(`http://localhost:5000/api/search?${query.toString()}`);
+      
+      if (!res.ok) {
+        throw new Error('Search failed');
+      }
+
       const data = await res.json();
-      setProducts(data);
+
+      if (Array.isArray(data)) {
+        setProducts(data);
+      } else {
+        console.error("API returned non-array data:", data);
+        setProducts([]); 
+      }
+
     } catch (error) {
       console.error("Search failed:", error);
+      setProducts([]);
     } finally {
       setLoading(false);
     }
