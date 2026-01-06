@@ -1,16 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/authMiddleware');
-const {
-  getMyWishlist,
-  checkWishlist,
-  addToWishlist,
-  removeFromWishlist,
-} = require('../controllers/wishlistController');
+const { getMyWishlist, addToWishlist, removeFromWishlist } = require('../controllers/wishlistController');
 
 router.get('/my', protect, getMyWishlist);
-router.get('/check/:itemType/:itemId', protect, checkWishlist);
 router.post('/add', protect, addToWishlist);
-router.post('/remove', protect, removeFromWishlist);
+router.delete('/:productId', protect, removeFromWishlist);
 
 module.exports = router;
