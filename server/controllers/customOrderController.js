@@ -1,12 +1,12 @@
 const CustomOrder = require('../models/customOrderModel');
-const Notification = require('../models/notificationSystemModel'); // Using your friend's model
+const Notification = require('../models/notificationSystemModel'); 
 
-// 1. Create Order & Notify Seller
+
 const createCustomOrder = async (req, res) => {
     try {
         const { sellerId, title, description, budget, deadline } = req.body;
 
-        // Create the order
+        
         const order = await CustomOrder.create({
             buyerId: req.user._id,
             sellerId,
@@ -16,14 +16,14 @@ const createCustomOrder = async (req, res) => {
             deadline
         });
 
-        // TRIGGER NOTIFICATION FOR SELLER
+        
         await Notification.create({
-            user: sellerId, // Sent TO the seller
-            sender: req.user._id, // Sent BY the buyer
+            user: sellerId, 
+            sender: req.user._id, 
             title: 'New Custom Order Request',
             message: `${req.user.name} wants to hire you for a custom project: ${title}`,
             type: 'custom_order_request',
-            link: '/custom-orders', // Clicking this takes seller to their dashboard tab
+            link: '/custom-orders', 
             isRead: false
         });
 
@@ -33,7 +33,7 @@ const createCustomOrder = async (req, res) => {
     }
 };
 
-// 2. Get Orders (For Creator/Seller Dashboard)
+
 const getReceivedOrders = async (req, res) => {
     try {
         const orders = await CustomOrder.find({ sellerId: req.user._id })
@@ -45,7 +45,7 @@ const getReceivedOrders = async (req, res) => {
     }
 };
 
-// 3. Get Orders (For Customer Dashboard)
+
 const getSentOrders = async (req, res) => {
     try {
         const orders = await CustomOrder.find({ buyerId: req.user._id })
@@ -57,16 +57,16 @@ const getSentOrders = async (req, res) => {
     }
 };
 
-// 4. Update Status & Notify Buyer
+
 const updateOrderStatus = async (req, res) => {
     try {
-        const { status } = req.body; // 'accepted' or 'rejected'
+        const { status } = req.body; 
         const orderId = req.params.id;
 
         const order = await CustomOrder.findById(orderId);
         if (!order) return res.status(404).json({ message: 'Order not found' });
 
-        // Security check: only the seller can update
+        
         if (order.sellerId.toString() !== req.user._id.toString()) {
             return res.status(401).json({ message: 'Not authorized' });
         }
@@ -74,10 +74,10 @@ const updateOrderStatus = async (req, res) => {
         order.status = status;
         await order.save();
 
-        // TRIGGER NOTIFICATION FOR BUYER
+     
         await Notification.create({
-            user: order.buyerId, // Sent TO the buyer
-            sender: req.user._id, // Sent BY the seller
+            user: order.buyerId, 
+            sender: req.user._id, 
             title: `Custom Order ${status === 'accepted' ? 'Accepted' : 'Rejected'}`,
             message: `Your request "${order.title}" was ${status} by the creator.`,
             type: 'custom_order_update',
