@@ -62,6 +62,8 @@ const createOrder = async (req, res) => {
             }
         });
     } catch (error) {
+        console.error('❌ Order Error:', error.message);
+        console.error('Full error:', error);
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 };

@@ -40,8 +40,7 @@ const searchIndexSchema = mongoose.Schema({
         city: String,
         district: String,
         coordinates: {
-            type: [Number], // [longitude, latitude]
-            index: '2dsphere'
+            type: [Number] // [longitude, latitude]
         }
     },
     creator: {
@@ -95,7 +94,7 @@ searchIndexSchema.index({
 
 // Compound indexes for common queries
 searchIndexSchema.index({ itemType: 1, category: 1, price: 1 });
-searchIndexSchema.index({ itemType: 1, location: '2dsphere', isActive: 1 });
+searchIndexSchema.index({ itemType: 1, 'location.city': 1, isActive: 1 });
 searchIndexSchema.index({ itemType: 1, acceptsCustomOrders: 1, isActive: 1 });
 searchIndexSchema.index({ itemType: 1, acceptsBookings: 1, isActive: 1 });
 
