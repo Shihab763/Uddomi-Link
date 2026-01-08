@@ -157,19 +157,9 @@ function Dashboard() {
           )}
 
        
-          {(hasRole('business-owner') || hasRole('artist')) && (
-            <>
-              {/* ANALYTICS */}
-              <Link
-                to="/analytics"
-                className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition text-center border-t-4 border-indigo-600"
-              >
-                <div className="text-4xl mb-3">📊</div>
-                <h3 className="text-lg font-bold text-dark">Analytics</h3>
-                <p className="text-sm text-gray-600 mt-2">Track performance</p>
-              </Link>
+         
 
-              {/* MY PRODUCTS */}
+              {/*my products*/}
               <Link
                 to="/my-products"
                 className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition text-center border-t-4 border-green-600"
@@ -211,7 +201,7 @@ function Dashboard() {
               </Link>
           )}
 
-          {/* --- UPDATED CUSTOM ORDERS CARD --- */}
+          {/*custom orders*/}
           <Link
             to="/custom-orders"
             className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition text-center border-t-4 border-blue-600"
@@ -235,7 +225,7 @@ function Dashboard() {
             <p className="text-sm text-gray-600 mt-2">Find exactly what you need</p>
           </Link>
 
-          {/* --- NEW COMMUNITY FEATURES --- */}
+          {/*community features*/}
           
           <Link
             to="/stories"
