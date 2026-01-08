@@ -53,7 +53,6 @@ function Dashboard() {
           </div>
         )}
 
-        {/* Main Dashboard Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-8">
           
           <Link
@@ -156,10 +155,17 @@ function Dashboard() {
             </Link>
           )}
 
-       
-         
+          {(hasRole('business-owner') || hasRole('artist')) && (
+            <>
+              <Link
+                to="/analytics"
+                className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition text-center border-t-4 border-indigo-600"
+              >
+                <div className="text-4xl mb-3">📊</div>
+                <h3 className="text-lg font-bold text-dark">Analytics</h3>
+                <p className="text-sm text-gray-600 mt-2">Track performance</p>
+              </Link>
 
-              {/*my products*/}
               <Link
                 to="/my-products"
                 className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition text-center border-t-4 border-green-600"
@@ -169,7 +175,6 @@ function Dashboard() {
                 <p className="text-sm text-gray-600 mt-2">Manage listings</p>
               </Link>
 
-    
               <Link
                 to="/portfolio"
                 className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition text-center border-t-4 border-purple-600"
@@ -201,7 +206,6 @@ function Dashboard() {
               </Link>
           )}
 
-          {/*custom orders*/}
           <Link
             to="/custom-orders"
             className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition text-center border-t-4 border-blue-600"
@@ -217,6 +221,15 @@ function Dashboard() {
           </Link>
 
           <Link
+            to="/wishlist"
+            className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition text-center border-t-4 border-pink-600"
+          >
+            <div className="text-4xl mb-3">❤️</div>
+            <h3 className="text-lg font-bold text-dark">Wishlist</h3>
+            <p className="text-sm text-gray-600 mt-2">Save favorites</p>
+          </Link>
+
+          <Link
             to="/search"
             className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition text-center border-t-4 border-teal-600"
           >
@@ -225,8 +238,6 @@ function Dashboard() {
             <p className="text-sm text-gray-600 mt-2">Find exactly what you need</p>
           </Link>
 
-          {/*community features*/}
-          
           <Link
             to="/stories"
             className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition text-center border-t-4 border-yellow-500"
