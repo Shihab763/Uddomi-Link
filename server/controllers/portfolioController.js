@@ -75,7 +75,7 @@ const addProject = async (req, res) => {
         portfolio = await Portfolio.create({ userId: req.user._id, projects: [] });
     }
 
-    portfolio.projects.unshift(req.body); // Add to top
+    portfolio.projects.unshift(req.body); 
     await portfolio.save();
     
 
